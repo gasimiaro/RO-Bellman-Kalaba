@@ -18,6 +18,8 @@ arbre = {
     'x15': {'x14': 5, 'x16': 6},
     'x16': {}
 }
+for key in arbre:
+    arbre[key] = (arbre[key], [])  # Ajoute une liste vide à chaque valeur
 
 # arbre = {
 #     'A': {'B': 5,'C' : 9, 'D' : 4},
@@ -45,30 +47,56 @@ for cle, valeur in arbre.items():
 
 
 # Créer un ensemble de toutes les valeurs des clés
-valeurs = set(v for voisins in arbre.values() for v in voisins)
+# valeurs = set(v for voisins in arbre.values() for v in voisins)
+all_values = [v[0] for v in arbre.values()]
+
+# Créer un ensemble à partir de cette liste
+valeurs = set()
+for val in all_values:
+    valeurs.update(val)
 
 # Trouver la première clé qui n'est pas dans les valeurs
 first_node = next(k for k in arbre.keys() if k not in valeurs)
+# print(first_node)
 
 
 
 
 
 # Reversed dictionary
+# reversed_arbre = {}
+
+# # Iterate through the original dictionary
+# for key, nested_dict in arbre.items():
+#     # Iterate through the nested dictionary
+#     for nested_key, value in nested_dict.items():
+#         # Check if the value already exists as a key in the reversed dictionary
+#         if nested_key in reversed_arbre:
+#             # If it exists, update its nested dictionary with the current key-value pair
+#             reversed_arbre[nested_key].update({key: value})
+#         else:
+#             # If it doesn't exist, create a new nested dictionary with the current key-value pair
+#             reversed_arbre[nested_key] = {key: value}
+# reversed_arbre[first_node] = {}
 reversed_arbre = {}
 
-# Iterate through the original dictionary
-for key, nested_dict in arbre.items():
-    # Iterate through the nested dictionary
+# Parcourir les éléments du dictionnaire original
+for key, (nested_dict, _) in arbre.items():
+    # Parcourir le dictionnaire imbriqué
     for nested_key, value in nested_dict.items():
-        # Check if the value already exists as a key in the reversed dictionary
+        # Vérifier si la valeur existe déjà comme clé dans le dictionnaire inversé
         if nested_key in reversed_arbre:
-            # If it exists, update its nested dictionary with the current key-value pair
+            # Si elle existe, mettre à jour son dictionnaire imbriqué avec la paire clé-valeur actuelle
             reversed_arbre[nested_key].update({key: value})
         else:
-            # If it doesn't exist, create a new nested dictionary with the current key-value pair
+            # Si elle n'existe pas, créer un nouveau dictionnaire imbriqué avec la paire clé-valeur actuelle
             reversed_arbre[nested_key] = {key: value}
+
+# Assurez-vous que le premier nœud est présent dans le dictionnaire inversé avec une liste vide
+first_node = next(iter(arbre))
 reversed_arbre[first_node] = {}
+
+# print(reversed_arbre)
 
 
 
@@ -123,31 +151,33 @@ reversed_arbre[first_node] = {}
 
 
 ##################################################3
-print("\n\n max optimal search : ")
+# print("\n\n max optimal search : ")
 
 
 # # initialize all potential
 # max_potentiel = {k:'-inf' for k,n in arbre.items()}  
-# max_potentiel[first_node] = 0
+# max_potentiel[last_node] = 0
+# print(max_potentiel)
 # max_distance = 0
 # finished = False
 # # arbre_copy = copy.deepcopy(arbre)  # Create a deep copymax_distance = 0
 # reversed_arbre_copy = reversed_arbre
 # trace = []
-# node = [first_node]
-# fin = len(arbre)
+# node = [last_node]
+# fin = 100
 # step = len(arbre)
 # while not finished:    
 #     fin -= 1
 #     new_node = []
 #     for child_node in node:
-#         for key,val in arbre[child_node].items():
-#             new_node.append(key)
-#             new_potential = max_potentiel[child_node] + val
-#             if max_potentiel[key] == '-inf':
-#                 max_potentiel[key] = new_potential
-#             elif max_potentiel[key] < new_potential:
-#                 max_potentiel[key] = new_potential
+#         for key,val in reversed_arbre[child_node].items():
+#             if child_node not in reversed_arbre[key] :   #check if not a cycle
+#                 new_node.append(key)
+#                 new_potential = max_potentiel[child_node] + val
+#                 if max_potentiel[key] == '-inf':
+#                     max_potentiel[key] = new_potential
+#                 elif max_potentiel[key] < new_potential:
+#                     max_potentiel[key] = new_potential
 #     node = new_node
 #     if fin == 0 :
 #         finished = True
@@ -156,17 +186,14 @@ print("\n\n max optimal search : ")
 
 # #search the optimal way
 # # def optimal_research():
-# print("here 1")
-# max_optimal_way = [last_node]
-# print("here 2")
+# max_optimal_way = [first_node]
 
-# current_node = last_node
-# print("here 3")
+# current_node = first_node
 
-# while current_node != first_node:
+# while current_node != last_node:
 #     # print("current node : "+current_node + " last node : " +last_node)
 
-#     for key,val in reversed_arbre[current_node].items():
+#     for key,val in arbre[current_node].items():
 #         if max_potentiel[current_node] == val + max_potentiel[key] : 
 #             max_optimal_way.append(key)
 #             current_node = key
@@ -175,54 +202,166 @@ print("\n\n max optimal search : ")
 # print(max_optimal_way)
 
 
-
 # initialize all potential
-max_potentiel = {k:'-inf' for k,n in arbre.items()}  
+max_potentiel = {k: float('-inf') for k,n in arbre.items()}  
 max_potentiel[last_node] = 0
-max_distance = 0
+max_distance = len(arbre)
 finished = False
 # arbre_copy = copy.deepcopy(arbre)  # Create a deep copymax_distance = 0
-reversed_arbre_copy = reversed_arbre
 trace = []
-node = [last_node]
-fin = 100
-step = len(arbre)
-while not finished:    
-    fin -= 1
-    new_node = []
-    for child_node in node:
-        for key,val in reversed_arbre[child_node].items():
-            new_node.append(key)
-            new_potential = max_potentiel[child_node] + val
-            if max_potentiel[key] == '-inf':
-                max_potentiel[key] = new_potential
-            elif max_potentiel[key] < new_potential:
-                max_potentiel[key] = new_potential
-    node = new_node
-    if fin == 0 :
-        finished = True
-print("potentiel max: ")
-print(max_potentiel)
 
-#search the optimal way
-# def optimal_research():
-print("here 1")
-max_optimal_way = [first_node]
-print("here 2")
+####################################### get all ways ###########################################
+# def getAllWays(reversed_tree, first_node):
+#     node = [first_node]
+#     way = {first_node: [[first_node]]}  # Initialiser avec le premier nœud et son propre chemin
+#     for step in range(1, 20):
+#         new_node = []
+#         for parent_node in node:
+#             if parent_node in reversed_tree:
+#                 for child_node in reversed_tree[parent_node].keys():
+#                     if parent_node not in reversed_tree[child_node]:
+#                         new_node.append(child_node)
+#                         # Ajouter l'étape dans la liste des étapes pour le nœud enfant
+#                         if child_node not in way:
+#                             way[child_node] = []
+#                         for path in way[parent_node]:
+#                             new_path = path.copy()
+#                             new_path.append(child_node)
+#                             # Ajouter le nouveau chemin seulement s'il n'existe pas déjà
+#                             if new_path not in way[child_node]:
+#                                 way[child_node].append(new_path)
+        
+#         # Mettre à jour les nœuds visités jusqu'à présent dans le chemin
+#         node = new_node
 
-current_node = first_node
-print("here 3")
+#     return way
 
-while current_node != last_node:
-    # print("current node : "+current_node + " last node : " +last_node)
+# first_node = 'x16'
+# way = getAllWays( reversed_arbre, first_node)
+# def print_way(way):
+#     for key, paths in way.items():
+#         print(key, ": ")
+#         for path  in paths:
+#             print(path)
+#         print()  # Ajoute une ligne vide après chaque clé
 
-    for key,val in arbre[current_node].items():
-        if max_potentiel[current_node] == val + max_potentiel[key] : 
-            max_optimal_way.append(key)
-            current_node = key
+# print_way(way)
 
-print("chemin max : ")
-print(max_optimal_way)
+def getAllWays(reversed_tree, first_node):
+    node = [first_node] 
+    way = {first_node: [[first_node]]}
+    
+    for step in range(1, 20):
+        new_node = []
+        for parent_node in node:
+            if parent_node in reversed_tree:
+                for child_node in reversed_tree[parent_node].keys():
+                    
+                    # Vérifier s'il y a un cycle
+                    if child_node not in way or parent_node not in way[child_node][-1]: 
+                        new_node.append(child_node)
+                        if child_node not in way:
+                            way[child_node] = []
+                        for path in way[parent_node]:
+                            new_path = path.copy()
+                            if child_node not in new_path:
+                                new_path.append(child_node)
+                            if new_path not in way[child_node]:
+                                way[child_node].append(new_path)
+        
+        node = new_node
+
+    return way
+first_node = 'x16'
+way = getAllWays( reversed_arbre, first_node)
+def print_way(way):
+    for key, paths in way.items():
+        print(key, ": ")
+        for path  in paths:
+            print(path)
+        print()  # Ajoute une ligne vide après chaque clé
+
+# print_way(way)
+##########################################################################################################################
+
+# def addArcStepsWay(tree, reversed_tree, first_node):
+
+#   node = [first_node]
+
+#   for step in range(1, len(tree)+20):
+
+#     new_node = []
+
+#     for parent_node in node:
+
+#       if parent_node in reversed_tree:
+        
+#         for child_node, _ in reversed_tree[parent_node].items():
+          
+#           # Vérifier qu'on ne crée pas de cycle  
+#           if parent_node not in reversed_tree[child_node]: 
+
+#             new_node.append(child_node)
+#             if step not in tree[child_node][1]:
+#             # Mettre à jour la liste des étapes pour ce noeud
+#                 tree[child_node][1].append(step)
+
+#     node = new_node
+paths = getAllWays(reversed_arbre, 'x16')
+# print_way(paths)
+# Fonction pour ajouter les longueurs de chemins comme étapes
+def addStepsFromPaths(tree, paths):
+
+  for node, path_list in paths.items():
+    for path in path_list:
+      
+      path_length = len(path) 
+          
+      if path_length not in tree[node][1]:
+            tree[node][1].append(path_length)
+def print_tree(tree):
+    for key, (value,step) in tree.items():
+        print(f"{key}: ({value},{step})")
+        print()  # Ajoute une ligne vide après chaque clé
+
+# addArcStepsWay(arbre,reversed_arbre,last_node)
+# print_tree(arbre)
+# print_tree(arbre)        
+addStepsFromPaths(arbre, paths)
+
+print_tree(arbre)
+
+# start_node = 'x16'
+# try:
+#     distances = bellman_ford(reversed_arbre, start_node)
+#     print("Distances les plus courtes à partir du noeud", start_node, ":")
+#     for node, distance in distances.items():
+#         print("Vers", node, ":", distance)
+# except ValueError as e:
+#     print(e)
+
+
+# print("potentiel max: ")
+# print(max_potentiel)
+
+# #search the optimal way
+# # def optimal_research():
+# max_optimal_way = [first_node]
+
+# current_node = first_node
+
+# while current_node != last_node:
+#     # print("current node : "+current_node + " last node : " +last_node)
+
+#     for key,val in arbre[current_node].items():
+#         if max_potentiel[current_node] == val + max_potentiel[key] : 
+#             max_optimal_way.append(key)
+#             current_node = key
+
+# print("chemin max : ")
+# print(max_optimal_way)
+
+
 
 
 
