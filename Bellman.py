@@ -1,5 +1,8 @@
 # import copy
 
+from pickle import TRUE
+
+
 arbre = {
     'x1': {'x2': 10},
     'x2': {'x4': 8, 'x3': 15},
@@ -41,10 +44,9 @@ for key in arbre:
 # }
 
 last_node = None
-for cle, valeur in arbre.items():
+for cle, (valeur,_) in arbre.items():
     if not valeur:
         last_node = cle
-
 
 # Créer un ensemble de toutes les valeurs des clés
 # valeurs = set(v for voisins in arbre.values() for v in voisins)
@@ -101,6 +103,28 @@ reversed_arbre[first_node] = {}
 
 
 
+# initialize all potential
+min_potentiel = {k: float('inf') for k in arbre.keys()}  
+min_potentiel[last_node] = 0
+# arbre_copy = copy.deepcopy(arbre)  # Create a deep copymax_distance = 0
+trace = []
+step = 1
+
+def getAllMinPotential(tree,potential):
+    step = 0
+    changed = True
+    # while step < len(tree) :
+    while changed :
+        changed = False
+        for parent_node,(child,s) in tree.items():
+        #    if step in s:               
+                for child_node,val in child.items():
+                    new_pot = potential[child_node] + val
+                    if potential[child_node] != "inf" and new_pot < potential[parent_node]:
+                        potential[parent_node] = new_pot
+                        changed = True
+        step += 1
+    return step
 
 
 
@@ -133,20 +157,16 @@ reversed_arbre[first_node] = {}
 # print("potentiel min: ")
 # print(min_potentiel)
 
-# #search the optimal way
-# # def optimal_research():
-
-# min_optimal_way = [first_node]
-# current_node = first_node
-# while current_node != last_node:
-#     for key,val in arbre[current_node].items():
-#         if min_potentiel[current_node] == val + min_potentiel[key] : 
-#             min_optimal_way.append(key)
-#             current_node = key
-
-# print("chemin min : ")
-# print(min_optimal_way)
-
+#search the optimal way
+def optimalMinSearch(tree,min_potential,first,last):
+    min_optimal_way = [first]
+    current_node = first
+    while current_node != last:
+        for key,val in tree[current_node][0].items():
+            if min_potential[current_node] == val + min_potential[key] : 
+                min_optimal_way.append(key)
+                current_node = key
+    return min_optimal_way
 
 
 
@@ -202,13 +222,6 @@ reversed_arbre[first_node] = {}
 # print(max_optimal_way)
 
 
-# initialize all potential
-max_potentiel = {k: float('-inf') for k,n in arbre.items()}  
-max_potentiel[last_node] = 0
-max_distance = len(arbre)
-finished = False
-# arbre_copy = copy.deepcopy(arbre)  # Create a deep copymax_distance = 0
-trace = []
 
 ####################################### get all ways ###########################################
 # def getAllWays(reversed_tree, first_node):
@@ -247,11 +260,11 @@ trace = []
 
 # print_way(way)
 
-def getAllWays(reversed_tree, first_node):
-    node = [first_node] 
-    way = {first_node: [[first_node]]}
+def getAllWays(reversed_tree, first):
+    node = [first] 
+    way = {first : [[first]]}
     
-    for step in range(1, 20):
+    for step in range(1, len(arbre)+100):
         new_node = []
         for parent_node in node:
             if parent_node in reversed_tree:
@@ -272,8 +285,68 @@ def getAllWays(reversed_tree, first_node):
         node = new_node
 
     return way
-first_node = 'x16'
-way = getAllWays( reversed_arbre, first_node)
+
+# def recheckWays(tree,ways):
+#     tip = 1
+#     changed = True
+#     while changed :
+#         changed = False
+#         for parent_node,(child,_) in tree.items() :
+#             for child_node in child.keys():
+#                 for path in ways[child_node] :
+#                     # print(path)
+#                     # print(path[-1])
+#                     # print(child_node)
+#                     if path[-1] == child_node:
+#                         # if tip == 1:
+#                         #     print(path)
+#                         path.append(parent_node)
+#                         if tip == 2:                        
+#                             print(path)
+#                         if path not in ways[parent_node] and path[-1] == parent_node:
+#                             # print("ampiana1")
+#                             # print(ways[parent_node])
+#                             # print(path)
+#                             ways[parent_node].append(path) 
+#                             # print("ampiana2")
+#                             # print(ways[parent_node])
+#                             changed = True
+#             tip +=1
+
+#     return ways
+def recheckWays(reversed_tree,ways):
+    tip = 1
+    changed = True
+    while changed :
+        changed = False
+        for parent_node,child in reversed_tree.items() :
+            
+                for child_node in child.keys():
+                    for path in ways[parent_node] :
+                        new_path = path.copy()
+                        # print(path)
+                        # print(path[-1])
+                        # print(child_node)
+                        if new_path[-1] == parent_node:
+                            # if tip == 1:
+                            #     print(path)
+                            new_path.append(child_node)
+                            # if tip == 2:                        
+                            #     print(path)
+                            if new_path not in ways[child_node] and new_path[-1] == child_node:
+                                # print("ampiana1")
+                                # print(ways[parent_node])
+                                # print(path)
+                                ways[child_node].append(path) 
+                                # print("ampiana2")
+                                # print(ways[parent_node])
+                                changed = True
+                tip +=1
+
+    return ways
+
+
+
 def print_way(way):
     for key, paths in way.items():
         print(key, ": ")
@@ -307,18 +380,19 @@ def print_way(way):
 #                 tree[child_node][1].append(step)
 
 #     node = new_node
-paths = getAllWays(reversed_arbre, 'x16')
 # print_way(paths)
 # Fonction pour ajouter les longueurs de chemins comme étapes
-def addStepsFromPaths(tree, paths):
+                
+def addStepsFromPaths(tree, AllPaths):
 
-  for node, path_list in paths.items():
+  for node, path_list in AllPaths.items():
     for path in path_list:
       
-      path_length = len(path) 
+      path_length = len(path) -1
           
       if path_length not in tree[node][1]:
             tree[node][1].append(path_length)
+
 def print_tree(tree):
     for key, (value,step) in tree.items():
         print(f"{key}: ({value},{step})")
@@ -326,11 +400,54 @@ def print_tree(tree):
 
 # addArcStepsWay(arbre,reversed_arbre,last_node)
 # print_tree(arbre)
-# print_tree(arbre)        
-addStepsFromPaths(arbre, paths)
+# print_tree(arbre)   
+# way = getAllWays( reversed_arbre, last_node)
+        
+paths = getAllWays(reversed_arbre, last_node)
+# print_way(paths)
+# recheckWay = recheckWays(arbre,paths)    
+recheckWay = recheckWays(reversed_arbre,paths)    
+print_way(recheckWay)    
+addStepsFromPaths(arbre, recheckWay)
 
 print_tree(arbre)
 
+################################################################################
+# initialize all potential
+max_potentiel = {k: float('-inf') for k in arbre.keys()}  
+max_potentiel[last_node] = 0
+max_distance = len(arbre)
+finished = False
+# arbre_copy = copy.deepcopy(arbre)  # Create a deep copymax_distance = 0
+trace = []
+step = 1
+
+def getAllMaxPotential(tree,potential):
+    step = 1
+    changed = True
+    # while step < max(tree[first_node][1]) :
+    while changed:
+        changed  =False
+        for parent_node,(child,s) in tree.items():
+           if step in s:               
+                for child_node,val in child.items():
+                    new_pot = potential[child_node] + val
+                    if potential[child_node] != "-inf" and new_pot > potential[parent_node]:
+                        potential[parent_node] = new_pot
+                        changed = True
+        step += 1
+    return step -1
+# step = getAllMinPotential(arbre,min_potentiel)
+# print(min_potentiel)
+# print(step -1)
+# min_optimal_way = optimalMinSearch(arbre,min_potentiel,first_node,last_node)
+# print("chemin min : ")
+# print(min_optimal_way)
+
+
+# step_max = getAllMaxPotential(arbre,max_potentiel)
+# print(max_potentiel)
+# print(step_max)
 # start_node = 'x16'
 # try:
 #     distances = bellman_ford(reversed_arbre, start_node)
