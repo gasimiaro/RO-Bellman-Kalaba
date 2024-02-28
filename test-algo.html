@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+
+    <script>
+        // Arbre de test
+const arbre = {
+  x1: {x2: 10},
+  x2: {x4: 8, x3: 15},
+  x3: {x6: 1, x11: 16},
+  x4: {x3: 8, x5: 6},
+  x5: {x9: 1},
+  x6: {x5: 5, x7: 4},
+  x7: {x8: 1, x11: 8},
+  x8: {x7: 1, x10: 2},
+  x9: {x8: 3, x10: 4},
+  x10: {x12: 7},
+  x11: {x12: 6, x13: 12},
+  x12: {x15: 9},
+  x13: {x14: 3},
+  x14: {x16: 3},
+  x15: {x14: 5, x16: 6},
+  x16: {}
+};
+
+// Ajoute un tableau vide pour stocker les longueurs de chemins
+for (let key in arbre) {
+  arbre[key] = [arbre[key], []]; 
+}
+
+let lastNode;
+for (let [key, value] of Object.entries(arbre)) {
+  if (Object.keys(value[0]).length === 0) {
+    lastNode = key;
+  }
+}
+
+// Trouve le premier noeud
+let firstNode = Object.keys(arbre)[0]; 
+
+// Inverse l'arbre
+function getReversedTree(tree, first) {
+  const reversedTree = {};
+  
+  for (let [key, [nestedDict]] of Object.entries(tree)) {
+    for (let [nestedKey, value] of Object.entries(nestedDict)) {
+      if (nestedKey in reversedTree) {
+        reversedTree[nestedKey][key] = value; 
+      } else {
+        reversedTree[nestedKey] = {[key]: value};
+      }
+    }
+  }
+  
+  reversedTree[first] = {};
+  return reversedTree;
+}
+
+let reversedArbre = getReversedTree(arbre, firstNode);
+
+// Cherche tous les chemins
+function getAllPaths(reversedTree, first) {
+
+  let paths = {[first]: [[first]]};
+  
+  for (let i = 1; i < Object.keys(arbre).length; i++) {
+  
+    let newPaths = {};
+    
+    for (let parent of Object.keys(paths)) {
+    
+      for (let child of Object.keys(reversedTree[parent])) {
+      
+        if (!paths[child] || !paths[child].includes(parent)) {
+        
+          if (!newPaths[child]) newPaths[child] = [];
+          
+          for (let path of paths[parent]) {
+            let newPath = [...path];
+            if (!newPath.includes(child)) {
+              newPath.push(child);
+              newPaths[child].push(newPath); 
+            }
+          }
+          
+        }
+        
+      }
+      
+    }
+    
+    paths = newPaths;
+    
+  }
+  
+  return paths;
+  
+}
+
+let allPaths = getAllPaths(reversedArbre, firstNode);
+
+// Ajoute les longueurs de chemins à l'arbre
+function addPathLengths(tree, paths) {
+  for (let key of Object.keys(paths)) {
+    let lengths = paths[key].map(p => p.length - 1);
+    tree[key][1].push(...lengths); 
+  }
+}
+
+addPathLengths(arbre, allPaths);
+
+// Cherche les chemins optimaux
+function findOptimalPaths(tree, first, last) {
+
+  let costs = {};
+  let optimalPaths = [];
+  
+  function dfs(node, path) {
+    if (node === last) {
+      optimalPaths.push(path);
+      return; 
+    }
+    
+    if (!(node in costs)) {
+      costs[node] = Infinity;
+    }
+    
+    for (let [child, weight] of Object.entries(tree[node][0])) {
+      let nextCost = costs[child] + weight;
+      if (nextCost < costs[node]) {
+        costs[node] = nextCost;
+        path.push(child);
+        dfs(child, path);
+        path.pop();
+      }
+    }
+
+  }
+  
+  dfs(first, [first]);
+  
+  return optimalPaths;
+
+}
+
+let minPaths = findOptimalPaths(arbre, firstNode, lastNode);
+
+console.log(minPaths);
+    </script>
+</body>
+</html>

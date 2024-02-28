@@ -1,0 +1,30 @@
+.container {
+    display: grid;
+    grid-template-columns: 1fr 3fr; /* Une colonne pour la barre latérale et trois colonnes pour le contenu principal */
+    grid-gap: 20px; /* Espacement entre les colonnes */
+  }
+  
+  .sidebar {
+    /* Styles pour la barre latérale */
+    height: 100vh;
+  }
+  
+  .main-container {
+    /* Styles pour le conteneur principal */
+    height: 100%;
+  }
+  
+  .vis-network {
+    width: 100%;
+    /* height: 600px !important; */
+  }
+  
+.green-border {
+    border: 3px solid green;
+
+  }
+
+  .vis-network{
+    width: 100%; /* ou une valeur spécifique en pixels */
+    height: 600px !important; 
+  }

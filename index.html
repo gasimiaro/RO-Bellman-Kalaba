@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="gojs.js"></script>
+</head>
+
+<body>
+  <div id="myDiagramDiv" style="width:100%; height:500px"></div>
+  <input id="nodeKeyInput" type="text">
+  <button id="addNodeButton">Ajouter sommet</button>
+  <script>
+    var $ = go.GraphObject.make;
+
+    var myDiagram =
+      $(go.Diagram, "myDiagramDiv",
+        {
+          initialAutoScale: go.Diagram.UniformToFill, 
+          layout: $(go.TreeLayout, {angle: 90})
+        });
+
+    // donnees du graphe
+    var nodeDataArray = [
+      {key: "x1"},
+      {key: "x2"}, 
+      {key: "x3"},
+      {key: "x4"},
+      {key: "x5"},
+      {key: "x6"},
+      {key: "x7"},
+      {key: "x8"},
+      {key: "x9"},
+      {key: "x10"},
+      {key: "x11"},
+      {key: "x12"},
+      {key: "x13"},
+      {key: "x14"},
+      {key: "x15"},
+      {key: "x16"}
+    ];
+
+    var linkDataArray = [
+      {from: "x1", to: "x2", weight: 10},
+      {from: "x2", to: "x4", weight: 8},
+      {from: "x2", to: "x3", weight: 15},
+      {from: "x3", to: "x6", weight: 1}, 
+      {from: "x3", to: "x11", weight: 16},
+      {from: "x4", to: "x3", weight: 8},
+      {from: "x4", to: "x5", weight: 6},
+      {from: "x5", to: "x9", weight: 1},
+      {from: "x6", to: "x5", weight: 5},
+      {from: "x6", to: "x7", weight: 4},
+      {from: "x7", to: "x8", weight: 1},
+      {from: "x7", to: "x11", weight: 8},
+      {from: "x8", to: "x7", weight: 1},
+      {from: "x8", to: "x10", weight: 2},
+      {from: "x9", to: "x8", weight: 3},
+      {from: "x9", to: "x10", weight: 4},
+      {from: "x10", to: "x12", weight: 7},
+      {from: "x11", to: "x12", weight: 6},
+      {from: "x11", to: "x13", weight: 12},
+      {from: "x12", to: "x15", weight: 9},
+      {from: "x13", to: "x14", weight: 3},
+      {from: "x14", to: "x16", weight: 3}, 
+      {from: "x15", to: "x14", weight: 5},
+      {from: "x15", to: "x16", weight: 6}
+    ];
+
+var addNodeButton = document.getElementById("addNodeButton");
+addNodeButton.addEventListener("click", function() {
+  var newKey = document.getElementById("nodeKeyInput").value;
+  if (newKey) {
+    myDiagram.model.addNodeData({key: newKey}); 
+  }
+});
+    // definir le template des noeuds
+    myDiagram.nodeTemplate =
+      $(go.Node, "Auto", 
+        {locationSpot: go.Spot.Center},
+        $(go.Shape, "Circle",
+          {fill: $(go.Brush, "Linear", {0: "rgb(254, 201, 0)", 1: "rgb(254, 162, 0)" }), stroke: "black"},
+          new go.Binding("fill", "color")),
+        $(go.TextBlock,
+          { margin: 10 },
+          new go.Binding("text", "key"))
+      );
+
+    // definir le template des liens  
+    myDiagram.linkTemplate =
+      $(go.Link, 
+        {routing: go.Link.Orthogonal},
+        $(go.Shape, {strokeWidth: 2},
+          new go.Binding("stroke", "color")),
+        $(go.TextBlock, {segmentIndex: 0, segmentOffset: new go.Point(-30, 0)},
+          new go.Binding("text", "weight"))
+      );
+
+    // initialiser le modele
+    myDiagram.model = new go.GraphLinksModel(
+      nodeDataArray,
+      linkDataArray
+    );
+  </script>
+</body>
+</html>

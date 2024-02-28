@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div id="graphe1"></div>
+    <div id="graphe2"></div>
+    <script>
+        // Créer les données des noeuds et des arcs pour le premier graphe
+        const nodes1 = new vis.DataSet([
+            { id: 1, label: "A" },
+            { id: 2, label: "B" },
+            { id: 3, label: "C" },
+            { id: 4, label: "D" },
+        ]);
+        const edges1 = new vis.DataSet([
+            { from: 1, to: 2, label: "10", arrows: "to" },
+            { from: 1, to: 3, label: "20", arrows: "from" },
+            { from: 2, to: 4, label: "30", arrows: "both" },
+        ]);
+
+        // Créer les données des noeuds et des arcs pour le deuxième graphe
+        const nodes2 = new vis.DataSet([
+            { id: 5, label: "E", color: "green" },
+            { id: 6, label: "F" },
+            { id: 7, label: "G" },
+            { id: 8, label: "H" },
+        ]);
+        const edges2 = new vis.DataSet([
+            { from: 5, to: 6, label: "40", arrows: "to" },
+            { from: 5, to: 7, label: "50", arrows: "from" },
+            { from: 6, to: 8, label: "60", arrows: "from" },
+        ]);
+
+        // Définir les options du graphe
+        const options = {
+            layout: {
+                hierarchical: false,
+            },
+            physics: {
+                enabled: false,
+            },
+            edges: {
+                arrows: {
+                    to: {
+                        enabled: true,
+                        scaleFactor: 0.5 // Vous pouvez ajuster la taille des flèches selon vos préférences
+                    }
+                }
+            }
+        };
+
+        // Créer une instance de vis.Network pour chaque graphe
+        const container1 = document.getElementById("graphe1");
+        const network1 = new vis.Network(container1, { nodes: nodes1, edges: edges1 }, options);
+
+        const container2 = document.getElementById("graphe2");
+        const network2 = new vis.Network(container2, { nodes: nodes2, edges: edges2 }, options);
+
+        // Afficher les graphes
+        network1.fit();
+        network2.fit();
+
+    </script>
+</body>
+
+</html>

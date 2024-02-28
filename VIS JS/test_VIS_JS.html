@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Graph Pondéré Draggable avec vis.js</title>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+
+
+</head>
+
+<body>
+  <div id="vis" style="height: 100%;">
+
+  </div>
+</body>
+<script>
+  // Votre code JavaScript pour créer le graphe ici
+  // Créer un réseau
+  var container = document.getElementById("vis");
+  var data = {
+    nodes: [
+      { id: 1, label: "Node 1" },
+      { id: 2, label: "Node 2" },
+      { id: 3, label: "Node 3" },
+    ],
+    edges: [
+      { from: 1, to: 2, label: "5" },
+      { from: 2, to: 3, label: "3" },
+      { from: 3, to: 1, label: "7" },
+    ],
+  };
+  var options = {};
+  var network = new vis.Network(container, data, options);
+
+  function creerGraphe(source, destination, valeur) {
+    // Création d'un tableau contenant les données des nœuds et des arcs
+    var nodes = new vis.DataSet([
+      { id: 1, label: source },
+      { id: 2, label: destination }
+    ]);
+
+    var edges = new vis.DataSet([
+      { from: 1, to: 2, label: valeur }
+    ]);
+
+    // Création d'un conteneur pour le graphe
+    var container = document.getElementById('network');
+
+    // Définition des options du graphe
+    var options = {
+      edges: {
+        arrows: 'to'
+      }
+    };
+
+    // Création du graphe
+    var network = new vis.Network(container, { nodes: nodes, edges: edges }, options);
+  }
+
+
+
+</script>
+
+</html>
