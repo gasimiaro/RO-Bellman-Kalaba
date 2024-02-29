@@ -5,13 +5,14 @@ import './Graph.css';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import axios from 'axios';
-
+import PotentialTable from './PotentialTable';
 export default function Graph() {
-    const [nextNodeId,setNextNodeId ] = useState(1);
+    // const [nextNodeId,setNextNodeId ] = useState(1);
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [titlePage,setTitlePage] = useState("");
   const graphRef = useRef(null);
+  const [minPotentials, setMinPotentials] = useState([{}]);
 
 //   const options = {
 //     physics: {
@@ -23,7 +24,7 @@ const options = {
         hierarchical: false,
     },
     physics: {
-        enabled: true,
+        enabled: false,
     },
     edges: {
         arrows: {
@@ -44,7 +45,7 @@ const options = {
     e.preventDefault();
     const newLabel = e.target.nodeLabel.value.trim(); // Trim leading/trailing spaces
     const sublabel = 1;
-    if (nodes.some(node => node.label.toLowerCase() === newLabel.toLowerCase())) {
+    if (nodes.some(node => node.label === newLabel)) {
       Swal.fire('Attention!', 'Noeud déjà existant', 'warning');
     } else {
       const nodeOptions = nodes.map(node => ({
@@ -52,11 +53,11 @@ const options = {
         label: node.label
     }));
         const newNode = {
-            id: nextNodeId,
+            id: newLabel,
             label: newLabel,            
         };
       setNodes(prev => [...prev, newNode]);
-      setNextNodeId(nextNodeId + 1);
+      // setNextNodeId(nextNodeId + 1);
     }
     e.target.nodeLabel.value = '';
   }
@@ -103,7 +104,7 @@ function addEdge(e) {
   
 
   function resetGraph() {
-    setNextNodeId(1)
+    // setNextNodeId(1)
     setNodes([]);
     setEdges([]);
     setTitlePage("");
@@ -209,8 +210,8 @@ const edgeOptions = edges.map(edge => {
         graph[node.label] = {};
         // Find edges related to this node
         edges.forEach(edge => {
-            const destinationNode = nodes.find(n => parseInt(n.id) === parseInt(edge.to));
-            if (parseInt(edge.from) === parseInt(node.id) ) {
+            const destinationNode = nodes.find(n => n.id === edge.to);
+            if (edge.from === node.id ) {
                 // Add the edge weight to the corresponding destination node
                 graph[node.label][destinationNode.label] = parseInt(edge.label);
             }
@@ -223,6 +224,8 @@ const edgeOptions = edges.map(edge => {
       console.log("reposne : ")
       console.log(response.data); // Handle the server response (optional)
       setTitlePage("Chemin Minimal");
+  
+      setMinPotentials(response.data.min_potentials_at_each_step);
       drawGraphMin(response.data.min_optimal_ways);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
@@ -244,8 +247,8 @@ async function getMaxWay() {
         graph[node.label] = {};
         // Find edges related to this node
         edges.forEach(edge => {
-            const destinationNode = nodes.find(n => parseInt(n.id) === parseInt(edge.to));
-            if (parseInt(edge.from) === parseInt(node.id) ) {
+            const destinationNode = nodes.find(n => (n.id) === (edge.to));
+            if ((edge.from) === (node.id) ) {
                 // Add the edge weight to the corresponding destination node
                 graph[node.label][destinationNode.label] = parseInt(edge.label);
             }
@@ -258,6 +261,8 @@ async function getMaxWay() {
       console.log("reposne : ")
       console.log(response.data); // Handle the server response (optional)
       setTitlePage("Chemin Maximal");
+      setMinPotentials(response.data.max_potentials_at_each_step);
+
       drawGraphMin(response.data.max_optimal_ways);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
@@ -299,7 +304,7 @@ async function getMaxWay() {
           </select>
           <label>
             Weight:
-            <input name="edgeWeight" /> 
+            <input type='number' name="edgeWeight" /> 
           </label>
           <button>Add Edge</button> 
         </form>
@@ -315,7 +320,10 @@ async function getMaxWay() {
                 <h2>{titlePage}</h2>
             </div>
             <div ref={graphRef} className='' />              
-            
+            <div>
+              <h1>Potentials at each step</h1>
+              <PotentialTable minPotentials={minPotentials} />
+            </div>
         </div>
       {/* <button onClick={drawGraph}>Draw</button> */}
     </div>

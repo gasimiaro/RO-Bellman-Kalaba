@@ -38,16 +38,16 @@ def set_arbre():
   #restructuring tree and adding ({},[])
   new_tree = restructTree(arbre)
 
-  print(new_tree)
 
   #get first node of tree
   first_node = getFirstNode(new_tree)
 
-  #get last node of tree
-  last_node = getLastNode(new_tree)
 
   #reverse tree to the algoritme traitement
   reversed_tree = getReversedTree(new_tree,first_node)
+
+  #get last node of tree
+  last_node = getLastNode(new_tree,reversed_tree)
 
 #   #get all ways
   all_way = getAllWays(reversed_tree,last_node)
@@ -67,6 +67,8 @@ def set_arbre():
   min_potential = res_min_potential['potential']
   min_step = res_min_potential['step']
   min_potentials_at_each_step = res_min_potential['potentials_at_each_step']
+  rectify_min_potentialsStep(min_potentials_at_each_step)
+#   print(min_potentials_at_each_step)
   #get minimal optimal way
   min_optimal_ways = optimalSearch(new_tree,min_potential,first_node,last_node)
 
@@ -74,8 +76,8 @@ def set_arbre():
   data ={
       'all_min_potential' : min_potential,
       'min_step' : min_step,
+      'min_potentials_at_each_step' : min_potentials_at_each_step,
       'min_optimal_ways' : min_optimal_ways,
-      'min_potentials_at_each_step' : min_potentials_at_each_step
   }
   print(data)
   response = make_response(jsonify(success=True))
@@ -84,6 +86,16 @@ def set_arbre():
 #   return jsonify(success=True)
 
 ###############################################################
+def rectify_min_potentialsStep(min_potentials_at_each_step):
+    for step in min_potentials_at_each_step:
+        for node, value in step.items():
+            if value == float('inf'):
+                step[node] = 'inf'
+            if value == float('-inf'):
+                step[node] = '-inf'
+    del min_potentials_at_each_step[-1]
+    return min_potentials_at_each_step
+
 
 @app.route('/get_max_way', methods=['POST', 'OPTIONS'])
 def get_max_way():
@@ -101,11 +113,12 @@ def get_max_way():
   #get first node of tree
   first_node = getFirstNode(not_cycle_tree)
 
-  #get last node of tree
-  last_node = getLastNode(not_cycle_tree)
 
   #reverse tree to the algoritme traitement
   reversed_tree = getReversedTree(not_cycle_tree,first_node)
+
+  #get last node of tree
+  last_node = getLastNode(not_cycle_tree,reversed_tree)
 
 #   #get all ways
   all_way = getAllWays(reversed_tree,last_node)
@@ -120,7 +133,8 @@ def get_max_way():
   res_max_potential = getAllMaxPotential(not_cycle_tree,last_node)
   max_potential = res_max_potential['potential']
   max_step = res_max_potential['step']
-
+  max_potentials_at_each_step = res_max_potential['potentials_at_each_step']
+  rectify_min_potentialsStep(max_potentials_at_each_step)
   #get maximal optimal way
   max_optimal_ways = optimalSearch(not_cycle_tree,max_potential,first_node,last_node)
 
@@ -128,6 +142,7 @@ def get_max_way():
       'all_max_potential' : max_potential,
       'max_step' : max_step,
       'max_optimal_ways' : max_optimal_ways,
+      'max_potentials_at_each_step' : max_potentials_at_each_step
   }
   print(data)
   response = make_response(jsonify(success=True))
@@ -148,13 +163,6 @@ def restructTree(tree):
 
 
 
-@app.route('/get_arbre')  
-def get_arbre():
-
-  return jsonify({
-    'arbre': arbre,
-    'max_arbre': updateTreeCycleDeleted(arbre) 
-  })
 
 # arbre = {
 #     'A': {'B': 5,'C' : 9, 'D' : 4},
@@ -174,10 +182,10 @@ def get_arbre():
 #     'O': {'P': 9},
 #     'P': {}
 # }
-def getLastNode(tree):
+def getLastNode(tree, reversed_tree):
     last_node = None
     for cle, (valeur,_) in tree.items():
-        if not valeur:
+        if not valeur and cle in reversed_tree:
             last_node = cle
     return last_node
 
@@ -228,7 +236,7 @@ def getAllMinPotential(tree,last):
     # while step < len(tree) :
     while changed :
         changed = False
-        potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
+        
         for parent_node,(child,s) in tree.items():
         #    if step in s:               
                 for child_node,val in child.items():
@@ -236,10 +244,33 @@ def getAllMinPotential(tree,last):
                     if potential[child_node] != "inf" and new_pot < potential[parent_node]:
                         potential[parent_node] = new_pot
                         changed = True
+        potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
         step += 1
     return {'step' : step -1,'potential' :potential, 'potentials_at_each_step' : potentials_at_each_step}
 ################################################################################
 
+
+def getAllMaxPotential(tree,last):
+    potential = {k: float('-inf') for k in tree.keys()}  
+    potential[last] = 0
+    potentials_at_each_step = []
+    step = 1
+    changed = True
+    # while step < max(tree[first_node][1]) :
+    while changed:
+        changed  =False
+        for parent_node,(child,s) in tree.items():
+           if step in s:               
+                for child_node,val in child.items():
+                    new_pot = potential[child_node] + val
+                    if potential[child_node] != "-inf" and new_pot > potential[parent_node]:
+                        potential[parent_node] = new_pot
+                        changed = True
+        potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
+        step += 1
+    return {'potential' : potential, 'step' :step -1 , 'potentials_at_each_step' : potentials_at_each_step}
+
+#################################################################
 #search the optimal way
 # def optimalSearch(tree,min_potential,first,last):
 #     optimal_way = []
@@ -260,11 +291,12 @@ def optimalSearch(tree, min_potential, first, last):
             optimal_ways.append(path[:])
             return
         for key, val in tree[current_node][0].items():
-            next_potential = val + min_potential[key]
-            if min_potential[current_node] == next_potential and key not in path:
-                path.append(key)
-                dfs(key, path)
-                path.pop()
+            if val != "inf" and val != "-inf":
+                next_potential = val + min_potential[key]
+                if min_potential[current_node] == next_potential and key not in path:
+                    path.append(key)
+                    dfs(key, path)
+                    path.pop()
 
     dfs(first, [first])
     return optimal_ways
@@ -385,24 +417,6 @@ def print_tree(tree):
 ################################################################################
 # initialize all potential
 
-
-def getAllMaxPotential(tree,last):
-    potential = {k: float('-inf') for k in tree.keys()}  
-    potential[last] = 0
-    step = 1
-    changed = True
-    # while step < max(tree[first_node][1]) :
-    while changed:
-        changed  =False
-        for parent_node,(child,s) in tree.items():
-           if step in s:               
-                for child_node,val in child.items():
-                    new_pot = potential[child_node] + val
-                    if potential[child_node] != "-inf" and new_pot > potential[parent_node]:
-                        potential[parent_node] = new_pot
-                        changed = True
-        step += 1
-    return {'potential' : potential, 'step' :step -1}
 
 #########################################################################
 
