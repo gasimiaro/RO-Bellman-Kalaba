@@ -45,12 +45,13 @@ def set_arbre():
 
   #reverse tree to the algoritme traitement
   reversed_tree = getReversedTree(new_tree,first_node)
-
+  print("reversed_tree : ")
   #get last node of tree
   last_node = getLastNode(new_tree,reversed_tree)
 
 #   #get all ways
   all_way = getAllWays(reversed_tree,last_node)
+
 #   data ={
 #       'reversedtree' : reversed_tree,
 #       'allway' : all_way,
@@ -65,6 +66,7 @@ def set_arbre():
   #get minimum potential and step
   res_min_potential = getAllMinPotential(new_tree,last_node)
   min_potential = res_min_potential['potential']
+#   print(min_potential)
   min_step = res_min_potential['step']
   min_potentials_at_each_step = res_min_potential['potentials_at_each_step']
   rectify_min_potentialsStep(min_potentials_at_each_step)
@@ -76,13 +78,20 @@ def set_arbre():
   data ={
       'all_min_potential' : min_potential,
       'min_step' : min_step,
-      'min_potentials_at_each_step' : min_potentials_at_each_step,
       'min_optimal_ways' : min_optimal_ways,
+      'min_potentials_at_each_step' : min_potentials_at_each_step,
   }
-  print(data)
-  response = make_response(jsonify(success=True))
-  response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
-  return data
+#   print(data)
+#   response = make_response(jsonify(success=True))
+#   response = make_response(jsonify(data))
+#   response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+#   return response
+  response = jsonify(data)
+  
+  response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+  
+  return response
 #   return jsonify(success=True)
 
 ###############################################################
@@ -246,6 +255,12 @@ def getAllMinPotential(tree,last):
                         changed = True
         potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
         step += 1
+    #recheck all potential for type of val infinity to javascript json
+    for node, val in potential.items():
+
+        if val == float('inf'):
+            potential[node] = 'inf'
+
     return {'step' : step -1,'potential' :potential, 'potentials_at_each_step' : potentials_at_each_step}
 ################################################################################
 
@@ -268,6 +283,9 @@ def getAllMaxPotential(tree,last):
                         changed = True
         potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
         step += 1
+    for node, val in potential.items():
+        if val == float('-inf'):
+            potential[node] = '-inf'     
     return {'potential' : potential, 'step' :step -1 , 'potentials_at_each_step' : potentials_at_each_step}
 
 #################################################################
@@ -291,7 +309,7 @@ def optimalSearch(tree, min_potential, first, last):
             optimal_ways.append(path[:])
             return
         for key, val in tree[current_node][0].items():
-            if val != "inf" and val != "-inf":
+            if min_potential[current_node]  != "inf" and min_potential[current_node]  != "-inf":
                 next_potential = val + min_potential[key]
                 if min_potential[current_node] == next_potential and key not in path:
                     path.append(key)

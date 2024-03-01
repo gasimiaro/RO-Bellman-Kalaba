@@ -224,7 +224,8 @@ const edgeOptions = edges.map(edge => {
       console.log("reposne : ")
       console.log(response.data); // Handle the server response (optional)
       setTitlePage("Chemin Minimal");
-  
+      console.log(response.data.min_step); // Handle the server response (optional)
+
       setMinPotentials(response.data.min_potentials_at_each_step);
       drawGraphMin(response.data.min_optimal_ways);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
