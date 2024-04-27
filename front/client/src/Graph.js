@@ -3,6 +3,7 @@ import * as vis from 'vis';
 import 'vis/dist/vis.min.css';
 import './Graph.css';
 import Swal from 'sweetalert2';
+
 import 'sweetalert2/dist/sweetalert2.min.css';
 import axios from 'axios';
 import PotentialTable from './PotentialTable';
@@ -11,35 +12,176 @@ export default function Graph() {
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
   const [titlePage,setTitlePage] = useState("");
+  const [optimalWay,setOptimalWay] = useState([]);
   const graphRef = useRef(null);
   const [minPotentials, setMinPotentials] = useState([{}]);
-
+  const [physicsEnabled, setPhysicsEnabled] = useState(true);
+  // let network = useRef(null);
 //   const options = {
 //     physics: {
 //       enabled: true
 //     }
 //   };
+// const options = {
+//     layout: {
+//         hierarchical: false,
+//     },
+//     physics: {
+//         enabled: true,
+//     },
+//     edges: {
+//         arrows: {
+//             to: {
+//                 enabled: true,
+//                 scaleFactor: 0.5 // Vous pouvez ajuster la taille des flèches selon vos préférences
+//             }
+//         }
+//     },
+//     nodes: {
+//         font: {
+//             size: 14 // Ajustez la taille de police selon vos préférences
+//         }
+//     }
+// };
 const options = {
-    layout: {
-        hierarchical: false,
+  layout: {
+    hierarchical: false,
+  },
+  physics: {
+    enabled: physicsEnabled,
+  },
+  edges: {
+    arrows: {
+      to: {
+        enabled: true,
+        scaleFactor: 0.5,
+      },
     },
-    physics: {
-        enabled: false,
+  },
+  nodes: {
+    font: {
+      size: 14,
     },
-    edges: {
-        arrows: {
-            to: {
-                enabled: true,
-                scaleFactor: 0.5 // Vous pouvez ajuster la taille des flèches selon vos préférences
-            }
-        }
+  },
+  manipulation: {
+    // addNode: function (data, callback) {
+    //   // ... (existing code)
+    // },
+    // editNode: function (data, callback) {
+    //   // ... (existing code)
+    // },
+    // addEdge: function (data, callback) {
+    //   // ... (existing code)
+    // },
+    enabled: true, 
+    initiallyActive: true, 
+    addNode : false,
+    addEdge : false,
+
+    editEdge: {
+      editWithoutDrag: function (data, callback) {
+        editEdgeWithoutDrag(data, callback);
+      },
     },
-    nodes: {
-        font: {
-            size: 14 // Ajustez la taille de police selon vos préférences
-        }
-    }
+
+}
 };
+
+
+// function editEdgeWithoutDrag(data, callback) {
+//   // filling in the popup DOM elements
+//   document.getElementById("edge-label").value = data.label;
+//   document.getElementById("edge-saveButton").onclick = saveEdgeData.bind(
+//     this,
+//     data,
+//     callback
+//   );
+//   document.getElementById("edge-cancelButton").onclick =
+//     cancelEdgeEdit.bind(this, callback);
+//   document.getElementById("edge-popUp").style.display = "block";
+
+//   var reponse = showSwal();
+//   console.log("numnber : ",reponse);
+
+// }
+async function editEdgeWithoutDrag(data, callback) {
+  const { value: newLabel } = await Swal.fire({
+    title: "Edit Edge Label",
+    input: "text",   
+    inputValue: data.label,
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value) {
+        return "You need to enter a label";
+      }
+    },
+  });
+
+  if (newLabel) {
+    if (typeof data.to === "object") data.to = data.to.id;
+    if (typeof data.from === "object") data.from = data.from.id;
+    const updatedEdge = {
+      from: data.from,
+      to: data.to,
+      // length: 300,
+      label: newLabel,
+      arrows: "to",
+    };
+
+    // Update the edges state with the edited edge
+    setEdges((prevEdges) =>
+      prevEdges.map((edge) =>
+        edge.from === updatedEdge.from && edge.to === updatedEdge.to
+          ? updatedEdge
+          : edge
+      )
+    );
+
+    callback(updatedEdge);
+  }
+}
+
+function clearEdgePopUp() {
+  document.getElementById("edge-saveButton").onclick = null;
+  document.getElementById("edge-cancelButton").onclick = null;
+  document.getElementById("edge-popUp").style.display = "none";
+}
+
+function cancelEdgeEdit(callback) {
+  clearEdgePopUp();
+  callback(null);
+}
+
+// function saveEdgeData(data, callback) {
+//   if (typeof data.to === "object") data.to = data.to.id;
+//   if (typeof data.from === "object") data.from = data.from.id;
+//   data.label = document.getElementById("edge-label").value;
+//   clearEdgePopUp();
+//   callback(data);
+// }
+function saveEdgeData(data, callback) {
+  if (typeof data.to === "object") data.to = data.to.id;
+  if (typeof data.from === "object") data.from = data.from.id;
+  const updatedEdge = {
+    from: data.from,
+    to: data.to,
+    // length: 300,
+    label: document.getElementById("edge-label").value,
+    arrows: "to",
+  };
+
+  // Update the edges state with the edited edge
+  setEdges((prevEdges) =>
+    prevEdges.map((edge) =>
+      edge.from === updatedEdge.from && edge.to === updatedEdge.to
+        ? updatedEdge
+        : edge
+    )
+  );
+
+  clearEdgePopUp();
+  callback(updatedEdge);
+}
 
   function addNode(e) {
     e.preventDefault();
@@ -63,18 +205,7 @@ const options = {
   }
   
 
-//   function addEdge(e) {
-//     e.preventDefault();
-//     const newEdge = {
-//       from: e.target.node1.value,
-//       to: e.target.node2.value,
-//       label: e.target.edgeWeight.value,
-//       arrows: "to"
-//     };
-//     // drawGraph(); // redessiner à chaque ajout
-//     setEdges(prev => [...prev, newEdge]);
-//     e.target.edgeWeight.value = 0;
-//   }
+
 
 function addEdge(e) {
     e.preventDefault();
@@ -94,6 +225,7 @@ function addEdge(e) {
       const newEdge = {
         from: fromId,
         to: toId,
+        // length: 300,
         label: e.target.edgeWeight.value,
         arrows: "to" // Replace with desired default arrow direction
       };
@@ -102,6 +234,8 @@ function addEdge(e) {
     }
   }
   
+
+//############################################################################3
 
   function resetGraph() {
     // setNextNodeId(1)
@@ -115,7 +249,8 @@ function addEdge(e) {
    const nodeOptions = nodes.map(node => ({
     id: node.id,
     label: node.label,
-    color: "#f88"
+    title: `${node.label}`, // Use node.label to make it dynamic
+        color: "#f88"
 }));
 
     new vis.Network(graphRef.current, {
@@ -146,8 +281,11 @@ function addEdge(e) {
 
 
 function drawGraphMin(min_way_to_color) {
+
   console.log("min_way_to_color: ", min_way_to_color);
-  // Créez un tableau pour stocker les options de chaque nœud
+  // Créez un tableau pour stocker les options de chaque nœud0
+  // To get a node's data:
+
   const nodeOptions = nodes.map(node => ({
       id: node.id,
       label: node.label,
@@ -155,7 +293,8 @@ function drawGraphMin(min_way_to_color) {
       font: min_way_to_color.some(path => path.includes(node.label)) ? { size: 22, color: "#fff", face: "Arial" } :"",
       shadow: min_way_to_color.some(path => path.includes(node.label)) ?  true : false
   }));
-
+  // let node1Data = nodeOptions.get(1);
+  // console.log("node voaloha : " ,node1Data.label); // Outputs: Node 1
 // Créez un tableau pour stocker les options de chaque arête
 const edgeOptions = edges.map(edge => {
   // Vérifiez si cette arête est présente dans un chemin spécifique de min_way_to_color
@@ -185,20 +324,46 @@ const edgeOptions = edges.map(edge => {
       ...edge,
       width: width,
       dashes : dashes,
+      // length: 300,
       color: color,
       font : {color : fontColor, size : fontSize}
   };
+
+
 });
 
 
-  new vis.Network(graphRef.current, {
+ const net =  new vis.Network(graphRef.current, {
       nodes: new vis.DataSet(nodeOptions),
       edges: new vis.DataSet(edgeOptions),
-      options: {
-        
-          // Spécifiez d'autres options si nécessaire
-      }
+      options
+
   });
+  net.on("afterDrawing", function () {
+    updateNodePositions(net);
+});
+}
+
+function updateNodePositions(network) {
+  const nodeIds = network.body.nodeIndices;
+  nodeIds.forEach((nodeId) => {
+      const nodePosition = network.getPositions([nodeId]);
+      const domPos = network.canvasToDOM(nodePosition[nodeId]);
+      updateOrCreateOverlay(nodeId, domPos);
+  });
+}
+
+function updateOrCreateOverlay(nodeId, position) {
+  let overlay = document.getElementById('overlay-' + nodeId);
+  if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'node-overlay';
+      overlay.id = 'overlay-' + nodeId;
+      overlay.textContent = 'vvv'; // Custom text to show over the node
+      document.body.appendChild(overlay);
+  }
+  overlay.style.left = position.x + 420 + 'px' ;
+  overlay.style.top = position.y + 100 +   'px';
 }
 
   async function getMinWay() {
@@ -228,6 +393,7 @@ const edgeOptions = edges.map(edge => {
 
       setMinPotentials(response.data.min_potentials_at_each_step);
       drawGraphMin(response.data.min_optimal_ways);
+      setOptimalWay(response.data.min_optimal_ways);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
       console.error(error);
@@ -279,9 +445,26 @@ async function getMaxWay() {
   
 
   
+  const handlePhysicsChange = (event) => {
+    setPhysicsEnabled(event.target.checked);
+  };
+
+  useEffect(() => {
+    options.physics.enabled = physicsEnabled;
+    if(titlePage == ""){
+      drawGraph();
+    }
+    else{
+      drawGraphMin(optimalWay);
+    }
+  }, [physicsEnabled]);
+
+
+
   return (
     // <div style={{ border: '3px solid green' }}>      
     <div className="green-border container">
+
       <div className="sidebar green-border">
         <form onSubmit={addNode}>
 
@@ -311,22 +494,32 @@ async function getMaxWay() {
         </form>
 
         <button onClick={resetGraph}>Reset</button> 
-      <button onClick={getMinWay}>Trouver le chemin Minimal</button>
-      <button onClick={getMaxWay}>Trouver le chemin Maximal</button>
-
-      </div>
-        <div className='main-container'>
-            <div className='graph-title'>
-                <h2>RECHERCHE OPERATIONNEL</h2>
-                <h2>{titlePage}</h2>
-            </div>
-            <div ref={graphRef} className='' />              
-            <div>
+        <button onClick={getMinWay}>Trouver le chemin Minimal</button>
+        <button onClick={getMaxWay}>Trouver le chemin Maximal</button>
+        <div>
               <h1>Potentials at each step</h1>
               <PotentialTable minPotentials={minPotentials} />
             </div>
+      </div>
+        <div className='main-container'>
+            <div className='graph-title'>
+                <h2>OPERATIONNAL SEARCH</h2>
+                <h2>{titlePage}</h2>
+            </div>
+            <div>
+            <label>
+                <input
+                  type="checkbox"
+                  checked={physicsEnabled}
+                  onChange={handlePhysicsChange}
+                />
+                smooth
+              </label>
+            </div>
+            <div ref={graphRef} className='' />              
+
         </div>
-      {/* <button onClick={drawGraph}>Draw</button> */}
+
     </div>
   );
 

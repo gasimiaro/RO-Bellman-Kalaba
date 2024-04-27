@@ -1,3 +1,5 @@
+import './PotentialTable.css';
+
 export default function PotentialTable({ minPotentials }) {
     const nodes = Object.keys(minPotentials[0]);
   
@@ -16,7 +18,7 @@ export default function PotentialTable({ minPotentials }) {
             <tr key={nodeIndex}>
               <td>{node}</td>
               {minPotentials.map((step, index) => (
-                <td key={index}>{step[node] === Infinity ? "Infinity" : step[node]}</td>
+                <td key={index}>{step[node] === Infinity ? "~" : step[node]}</td>
               ))}
             </tr>
           ))}
