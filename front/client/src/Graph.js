@@ -88,22 +88,6 @@ const options = {
 };
 
 
-// function editEdgeWithoutDrag(data, callback) {
-//   // filling in the popup DOM elements
-//   document.getElementById("edge-label").value = data.label;
-//   document.getElementById("edge-saveButton").onclick = saveEdgeData.bind(
-//     this,
-//     data,
-//     callback
-//   );
-//   document.getElementById("edge-cancelButton").onclick =
-//     cancelEdgeEdit.bind(this, callback);
-//   document.getElementById("edge-popUp").style.display = "block";
-
-//   var reponse = showSwal();
-//   console.log("numnber : ",reponse);
-
-// }
 async function editEdgeWithoutDrag(data, callback) {
   const { value: newLabel } = await Swal.fire({
     title: "Edit Edge Label",
@@ -138,50 +122,14 @@ async function editEdgeWithoutDrag(data, callback) {
     );
 
     callback(updatedEdge);
+    clearExistingOverlays() ;
+    setTitlePage("");
+    setMinPotentials([{}]);
   }
 }
 
-function clearEdgePopUp() {
-  document.getElementById("edge-saveButton").onclick = null;
-  document.getElementById("edge-cancelButton").onclick = null;
-  document.getElementById("edge-popUp").style.display = "none";
-}
 
-function cancelEdgeEdit(callback) {
-  clearEdgePopUp();
-  callback(null);
-}
 
-// function saveEdgeData(data, callback) {
-//   if (typeof data.to === "object") data.to = data.to.id;
-//   if (typeof data.from === "object") data.from = data.from.id;
-//   data.label = document.getElementById("edge-label").value;
-//   clearEdgePopUp();
-//   callback(data);
-// }
-function saveEdgeData(data, callback) {
-  if (typeof data.to === "object") data.to = data.to.id;
-  if (typeof data.from === "object") data.from = data.from.id;
-  const updatedEdge = {
-    from: data.from,
-    to: data.to,
-    // length: 300,
-    label: document.getElementById("edge-label").value,
-    arrows: "to",
-  };
-
-  // Update the edges state with the edited edge
-  setEdges((prevEdges) =>
-    prevEdges.map((edge) =>
-      edge.from === updatedEdge.from && edge.to === updatedEdge.to
-        ? updatedEdge
-        : edge
-    )
-  );
-
-  clearEdgePopUp();
-  callback(updatedEdge);
-}
 
   function addNode(e) {
     e.preventDefault();
@@ -202,6 +150,10 @@ function saveEdgeData(data, callback) {
       // setNextNodeId(nextNodeId + 1);
     }
     e.target.nodeLabel.value = '';
+    setTitlePage("");
+    clearExistingOverlays() ;
+    setTitlePage("");
+    setMinPotentials([{}]);
   }
   
 
@@ -232,6 +184,10 @@ function addEdge(e) {
       setEdges(prev => [...prev, newEdge]);
       e.target.edgeWeight.value = 0; // Reset weight input
     }
+    setTitlePage("");
+    clearExistingOverlays() ;
+    setTitlePage("");
+    setMinPotentials([{}]);
   }
   
 
@@ -242,6 +198,9 @@ function addEdge(e) {
     setNodes([]);
     setEdges([]);
     setTitlePage("");
+    clearExistingOverlays() ;
+    setTitlePage("");
+    setMinPotentials([{}]);
   }
 
   function drawGraph() {
@@ -280,9 +239,11 @@ function addEdge(e) {
 // }
 
 
-function drawGraphMin(min_way_to_color) {
+function drawGraphMin(all_potential,min_way_to_color) {
+  console.log("min all_potential : ", all_potential);
 
-  console.log("min_way_to_color: ", min_way_to_color);
+
+  console.log("min_way_to_color: ", min_way_to_color[0]);
   // Créez un tableau pour stocker les options de chaque nœud0
   // To get a node's data:
 
@@ -290,12 +251,13 @@ function drawGraphMin(min_way_to_color) {
       id: node.id,
       label: node.label,
       color:  "#f88",
-      font: min_way_to_color.some(path => path.includes(node.label)) ? { size: 22, color: "#fff", face: "Arial" } :"",
+      font: 
+      min_way_to_color[0][0] == node.id? { size: 22, color: "#fff", face: "Arial" ,background : "#7f7"} : 
+      // min_way_to_color[0][min_way_to_color.length - 1] == node.id? { size: 22, color: "#fff", face: "Arial" ,background : "#ff4433"} :
+              min_way_to_color.some(path => path.includes(node.label)) ? { size: 22, color: "#fff", face: "Arial" } :"",
       shadow: min_way_to_color.some(path => path.includes(node.label)) ?  true : false
   }));
-  // let node1Data = nodeOptions.get(1);
-  // console.log("node voaloha : " ,node1Data.label); // Outputs: Node 1
-// Créez un tableau pour stocker les options de chaque arête
+
 const edgeOptions = edges.map(edge => {
   // Vérifiez si cette arête est présente dans un chemin spécifique de min_way_to_color
   const isSpecialEdge = min_way_to_color.some(path => {
@@ -340,32 +302,55 @@ const edgeOptions = edges.map(edge => {
 
   });
   net.on("afterDrawing", function () {
-    updateNodePositions(net);
+    updateNodePositions(net,all_potential);
 });
+
 }
 
-function updateNodePositions(network) {
+//#############################################################################################################
+//#############################################################################################################
+
+function updateNodePositions(network,all_potential) {
+
+  if (!all_potential.length) {
+    console.log("all_potential is empty or not loaded yet");
+    return; // Exit if data isn't ready
+  }
+  clearExistingOverlays();
   const nodeIds = network.body.nodeIndices;
+  const nodesDataset = network.body.data.nodes; // Access the nodes DataSet
+
   nodeIds.forEach((nodeId) => {
       const nodePosition = network.getPositions([nodeId]);
       const domPos = network.canvasToDOM(nodePosition[nodeId]);
-      updateOrCreateOverlay(nodeId, domPos);
+      const nodeData = nodesDataset.get(nodeId); // Get the node data
+
+      const PotentialValue = all_potential[all_potential.length - 1][nodeData.label];
+
+      updateOrCreateOverlay(nodeId, domPos, PotentialValue);
   });
 }
 
-function updateOrCreateOverlay(nodeId, position) {
+
+function updateOrCreateOverlay(nodeId, position, label) {
   let overlay = document.getElementById('overlay-' + nodeId);
   if (!overlay) {
       overlay = document.createElement('div');
       overlay.className = 'node-overlay';
       overlay.id = 'overlay-' + nodeId;
-      overlay.textContent = 'vvv'; // Custom text to show over the node
+      overlay.textContent = label; // Custom text to show over the node
       document.body.appendChild(overlay);
   }
   overlay.style.left = position.x + 420 + 'px' ;
   overlay.style.top = position.y + 100 +   'px';
 }
 
+function clearExistingOverlays() {
+  const overlays = document.querySelectorAll('.node-overlay');
+  overlays.forEach(overlay => overlay.remove());
+}
+//#############################################################################################################
+//#############################################################################################################
   async function getMinWay() {
     // Create the graph object in the required format
     const graph = {};
@@ -386,13 +371,10 @@ function updateOrCreateOverlay(nodeId, position) {
     try {
         console.log(JSON.stringify(graph));
       const response = await axios.post('/get_min_way', graph);
-      console.log("reposne : ")
-      console.log(response.data); // Handle the server response (optional)
       setTitlePage("Chemin Minimal");
-      console.log(response.data.min_step); // Handle the server response (optional)
-
-      setMinPotentials(response.data.min_potentials_at_each_step);
-      drawGraphMin(response.data.min_optimal_ways);
+      const minPotentials_direct = response.data.min_potentials_at_each_step;
+      setMinPotentials(minPotentials_direct);
+      drawGraphMin(minPotentials_direct,response.data.min_optimal_ways);
       setOptimalWay(response.data.min_optimal_ways);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
@@ -423,14 +405,13 @@ async function getMaxWay() {
     });
 
     try {
-        console.log(JSON.stringify(graph));
       const response = await axios.post('/get_max_way', graph);
-      console.log("reposne : ")
-      console.log(response.data); // Handle the server response (optional)
       setTitlePage("Chemin Maximal");
-      setMinPotentials(response.data.max_potentials_at_each_step);
+      const maxPotentials_direct = response.data.max_potentials_at_each_step;
+      setMinPotentials(maxPotentials_direct);
+      drawGraphMin(maxPotentials_direct,response.data.max_optimal_ways);
+      setOptimalWay(response.data.max_optimal_ways);
 
-      drawGraphMin(response.data.max_optimal_ways);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
       console.error(error);
@@ -453,9 +434,10 @@ async function getMaxWay() {
     options.physics.enabled = physicsEnabled;
     if(titlePage == ""){
       drawGraph();
+      clearExistingOverlays() ;
     }
     else{
-      drawGraphMin(optimalWay);
+      drawGraphMin(minPotentials,optimalWay);
     }
   }, [physicsEnabled]);
 
