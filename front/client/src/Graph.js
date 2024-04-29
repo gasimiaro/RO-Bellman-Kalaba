@@ -19,6 +19,9 @@ export default function Graph() {
   //for step by step
   const [network, setNetwork] = useState(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [posX, setPosX] = useState(0);
+  const [posY, setPosY] = useState(0);
+
 
 const options = {
   layout: {
@@ -67,6 +70,8 @@ function removeEdgeById(edges, edgeId) {
   return edges.filter(edge => edge.id !== edgeId);
 }
 
+
+
 async function confirmDelete(data, callback, type) {
   const itemType = type.charAt(0).toUpperCase() + type.slice(1); // 'Node' or 'Edge'
   const swalResult = await Swal.fire({
@@ -80,17 +85,22 @@ async function confirmDelete(data, callback, type) {
   });
 
   if (swalResult.value) {
+    setCurrentStepIndex(0);
       if(type == "edge"){
         const new_edges = removeEdgeById(edges, data.edges[0]);
         setEdges(new_edges);
       }
       if(type == "node"){
+        console.log("nodes : ",data.nodes[0])
         const new_nodes = removeEdgeById(nodes, data.nodes[0]);
+        const new_edges = edges.filter(edge => edge.from !== data.nodes[0] && edge.to !== data.nodes[0]);
+        setEdges(new_edges);
         setNodes(new_nodes);
       }
       clearExistingOverlays() ;
       setTitlePage("");
       setMinPotentials([{}]);
+      setCurrentStepIndex(0);
     // callback(data); // Vis.js expects this callback to be called with the data to finalize the deletion
     Swal.fire(
       'Deleted!',
@@ -137,6 +147,8 @@ async function editEdgeWithoutDrag(data, callback) {
     clearExistingOverlays() ;
     setTitlePage("");
     setMinPotentials([{}]);
+    setCurrentStepIndex(0);
+
   }
 }
 
@@ -163,6 +175,8 @@ async function editEdgeWithoutDrag(data, callback) {
     clearExistingOverlays() ;
     setTitlePage("");
     setMinPotentials([{}]);
+    setCurrentStepIndex(0);
+
   }
   
 function addEdge(e) {
@@ -194,6 +208,8 @@ function addEdge(e) {
     clearExistingOverlays() ;
     setTitlePage("");
     setMinPotentials([{}]);
+    setCurrentStepIndex(0);
+
   }
   
 
@@ -207,6 +223,7 @@ function addEdge(e) {
     clearExistingOverlays() ;
     setTitlePage("");
     setMinPotentials([{}]);
+    setCurrentStepIndex(0);
   }
 
   function drawGraph() {
@@ -230,74 +247,132 @@ function addEdge(e) {
 
   }
 
-
-function drawGraphMin(all_potential, min_way_to_color, network) {
-  setCurrentStepIndex(0);
-  // To get a node's data:
-  console.log("min_way_to_color : ", min_way_to_color);
-
-  // Check if min_way_to_color is not empty
-  if (min_way_to_color.length === 0) {
-    // If min_way_to_color is empty, reset node and edge styles to default
+  function resetGraphStyles(network) {
     const nodes = network.body.data.nodes;
     const edges = network.body.data.edges;
-
-    nodes.update(nodes.map(node => ({ ...node, font: { size: 14 }, shadow: false })));
-    edges.update(edges.map(edge => ({ ...edge, width: 1, dashes: false, color: '#848484', font: { color: '#555', size: 14 } })));
-  } else {
-    // If min_way_to_color is not empty, update node and edge styles
-    const nodes = network.body.data.nodes;
-    const edges = network.body.data.edges;
-
-    nodes.update(nodes.map(node => {
-      const isStartNode = min_way_to_color[0][0] === node.id;
-      const isOnPath = min_way_to_color.some(path => path.includes(node.label));
-
-      return {
-        ...node,
-        font: isStartNode
-          ? { size: 22, color: '#fff', face: 'Arial', background: '#7f7' }
-          : isOnPath
-            ? { size: 22, color: '#fff', face: 'Arial' }
-            : { size: 14 },
-        shadow: isOnPath,
-      };
-    }));
-
-    edges.update(edges.map(edge => {
-      const isSpecialEdge = min_way_to_color.some(path => {
-        for (let i = 0; i < path.length - 1; i++) {
-          if (path[i] === edge.from && path[i + 1] === edge.to) {
-            return true;
-          }
-        }
-        return false;
-      });
-
-      let width = 1;
-      let color = '#848484';
-      let dashes = false;
-      let fontColor = '#555';
-      let fontSize = 14;
-
-      if (isSpecialEdge) {
-        width = 9;
-        color = '#ddd';
-        dashes = [3, 12];
-        fontColor = '#000';
-        fontSize = 24;
-      }
-
-      return {
-        ...edge,
-        width,
-        dashes,
-        color,
-        font: { color: fontColor, size: fontSize },
-      };
-    }));
+  
+    nodes.update(nodes.map(node => ({
+      ...node, 
+      font: { size: 14 }, 
+      shadow: false 
+    })));
+  
+    edges.update(edges.map(edge => ({
+      ...edge, 
+      width: 1, 
+      dashes: false, 
+      color: '#848484', 
+      font: { color: '#555', size: 14 }
+    })));
   }
-}
+
+  function drawGraphMin(all_potential, min_way_to_color, network) {
+    console.log("min_way_to_color : ", min_way_to_color);
+  
+    if (min_way_to_color.length === 0) {
+      resetGraphStyles(network);
+    } else {
+      // Update node and edge styles for non-empty min_way_to_color
+      const nodes = network.body.data.nodes;
+      const edges = network.body.data.edges;
+  
+      nodes.update(nodes.map(node => {
+        const isStartNode = min_way_to_color[0][0] === node.id;
+        const isOnPath = min_way_to_color.some(path => path.includes(node.label));
+        return {
+          ...node,
+          font: isStartNode ? { size: 22, color: '#fff', face: 'Arial', background: '#7f7' }
+                            : isOnPath ? { size: 22, color: '#fff', face: 'Arial' }
+                                       : { size: 14 },
+          shadow: isOnPath,
+        };
+      }));
+  
+      edges.update(edges.map(edge => {
+        const isSpecialEdge = min_way_to_color.some(path => {
+          for (let i = 0; i < path.length - 1; i++) {
+            if (path[i] === edge.from && path[i + 1] === edge.to) return true;
+          }
+          return false;
+        });
+  
+        return {
+          ...edge,
+          width: isSpecialEdge ? 9 : 1,
+          dashes: isSpecialEdge ? [3, 12] : false,
+          color: isSpecialEdge ? '#ddd' : '#848484',
+          font: { color: isSpecialEdge ? '#000' : '#555', size: isSpecialEdge ? 24 : 14 },
+        };
+      }));
+    }
+  }
+  
+// function drawGraphMin(all_potential, min_way_to_color, network) {
+//   // To get a node's data:
+//   console.log("min_way_to_color : ", min_way_to_color);
+
+//   // Check if min_way_to_color is not empty
+//   if (min_way_to_color.length === 0) {
+//     // If min_way_to_color is empty, reset node and edge styles to default
+//     const nodes = network.body.data.nodes;
+//     const edges = network.body.data.edges;
+
+//     nodes.update(nodes.map(node => ({ ...node, font: { size: 14 }, shadow: false })));
+//     edges.update(edges.map(edge => ({ ...edge, width: 1, dashes: false, color: '#848484', font: { color: '#555', size: 14 } })));
+//   } else {
+//     // If min_way_to_color is not empty, update node and edge styles
+//     const nodes = network.body.data.nodes;
+//     const edges = network.body.data.edges;
+
+//     nodes.update(nodes.map(node => {
+//       const isStartNode = min_way_to_color[0][0] === node.id;
+//       const isOnPath = min_way_to_color.some(path => path.includes(node.label));
+
+//       return {
+//         ...node,
+//         font: isStartNode
+//           ? { size: 22, color: '#fff', face: 'Arial', background: '#7f7' }
+//           : isOnPath
+//             ? { size: 22, color: '#fff', face: 'Arial' }
+//             : { size: 14 },
+//         shadow: isOnPath,
+//       };
+//     }));
+
+//     edges.update(edges.map(edge => {
+//       const isSpecialEdge = min_way_to_color.some(path => {
+//         for (let i = 0; i < path.length - 1; i++) {
+//           if (path[i] === edge.from && path[i + 1] === edge.to) {
+//             return true;
+//           }
+//         }
+//         return false;
+//       });
+
+//       let width = 1;
+//       let color = '#848484';
+//       let dashes = false;
+//       let fontColor = '#555';
+//       let fontSize = 14;
+
+//       if (isSpecialEdge) {
+//         width = 9;
+//         color = '#ddd';
+//         dashes = [3, 12];
+//         fontColor = '#000';
+//         fontSize = 24;
+//       }
+
+//       return {
+//         ...edge,
+//         width,
+//         dashes,
+//         color,
+//         font: { color: fontColor, size: fontSize },
+//       };
+//     }));
+//   }
+// }
 
 // function drawGraphMin(all_potential,min_way_to_color, network) {
 
@@ -383,11 +458,12 @@ function updateNodePositions(network,all_potential) {
       const domPos = network.canvasToDOM(nodePosition[nodeId]);
       const nodeData = nodesDataset.get(nodeId); // Get the node data
 
-      // const PotentialValue = all_potential[all_potential.length - 1][nodeData.label];
       const PotentialValue = all_potential[currentStepIndex][nodeData.label];
       updateOrCreateOverlay(nodeId, domPos, PotentialValue);
   });
 }
+
+
 
 
 function updateOrCreateOverlay(nodeId, position, label) {
@@ -400,6 +476,8 @@ function updateOrCreateOverlay(nodeId, position, label) {
           overlay.textContent = label ; // Custom text to show over the node
           document.body.appendChild(overlay);
   }
+  setPosX(position.x);
+  setPosY(position.y);
   overlay.style.left = position.x + 420 + 'px' ;
   overlay.style.top = position.y + 125 +'px';
 }
@@ -410,15 +488,23 @@ function clearExistingOverlays() {
 }
 
 //step by step
+
+const handlePreviousStep = () => {
+  if (currentStepIndex > 0) {
+    setCurrentStepIndex(currentStepIndex - 1);
+  }
+};
+
 const handleNextStep = () => {
   if (currentStepIndex < minPotentials.length - 1) {
     setCurrentStepIndex(currentStepIndex + 1);
   }
 };
 
-const handlePreviousStep = () => {
-  if (currentStepIndex > 0) {
-    setCurrentStepIndex(currentStepIndex - 1);
+
+const handleSkipStep = () => {
+  if (currentStepIndex < minPotentials.length - 1) {
+    setCurrentStepIndex(minPotentials.length - 1);
   }
 };
 //#############################################################################################################
@@ -426,7 +512,7 @@ const handlePreviousStep = () => {
   async function getMinWay() {
     // Create the graph object in the required format
     const graph = {};
-
+    console.log(edges,nodes)
     nodes.forEach(node => {
         // Initialize an empty object for each node
         graph[node.label] = {};
@@ -434,6 +520,7 @@ const handlePreviousStep = () => {
         edges.forEach(edge => {
             const destinationNode = nodes.find(n => n.id === edge.to);
             if (edge.from === node.id ) {
+              console.log(edge.from,edge.to,destinationNode)
                 // Add the edge weight to the corresponding destination node
                 graph[node.label][destinationNode.label] = parseInt(edge.label);
             }
@@ -441,13 +528,18 @@ const handlePreviousStep = () => {
     });
 
     try {
-        console.log(JSON.stringify(graph));
       const response = await axios.post('/get_min_way', graph);
       setTitlePage("Chemin Minimal");
       const minPotentials_direct = response.data.min_potentials_at_each_step;
+      const current_optimal_way = response.data.min_optimal_ways;
       setMinPotentials(minPotentials_direct);
-      drawGraphMin(minPotentials_direct,response.data.min_optimal_ways,network);
-      setOptimalWay(response.data.min_optimal_ways);
+      console.log("lehibe : ",minPotentials_direct.length)
+      setCurrentStepIndex(0);
+
+      if(minPotentials_direct.length == 1){
+        drawGraphMin(minPotentials_direct,current_optimal_way,network);
+      }
+      setOptimalWay(current_optimal_way);
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
       console.error(error);
@@ -476,9 +568,14 @@ async function getMaxWay() {
       const response = await axios.post('/get_max_way', graph);
       setTitlePage("Chemin Maximal");
       const maxPotentials_direct = response.data.max_potentials_at_each_step;
+      const current_optimal_way = response.data.max_optimal_ways;
       setMinPotentials(maxPotentials_direct);
-      drawGraphMin(maxPotentials_direct,response.data.max_optimal_ways,network);
-      setOptimalWay(response.data.max_optimal_ways);
+      setCurrentStepIndex(0);
+
+      if(maxPotentials_direct.length == 1){
+        drawGraphMin(maxPotentials_direct,current_optimal_way,network);
+      }
+      setOptimalWay(current_optimal_way);
 
       Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
     } catch (error) {
@@ -533,21 +630,58 @@ async function getMaxWay() {
   }
 
   useEffect(() => {
+    
     if (!network) {
       initializeGraph();
     }
   }, [nodes, edges, network]);
 
+// useEffect(()=>{
+//   console.log(posX)
+//   if(network){
+//     updateNodePositions(network,minPotentials); 
+//   }
+
+// },[posX,posY]);
+
+  useEffect(() => {
+    if (network) {
+      const updatedOptions = {
+        ...options,
+        physics: {
+          enabled: physicsEnabled,
+        },
+      };
+  
+      network.setOptions(updatedOptions);
+    }
+  }, [physicsEnabled, options, network]);
+
   useEffect(() => {
     options.physics.enabled = physicsEnabled;
     if (titlePage === "") {
       clearExistingOverlays();
-    } else {
+    } else if (currentStepIndex == minPotentials.length -1) {
       drawGraphMin(minPotentials, optimalWay, network);
+    } else {
+      resetGraphStyles(network);
     }
-    options.physics.enabled = physicsEnabled;
+  }, [titlePage, minPotentials, optimalWay, physicsEnabled, network, currentStepIndex]);
+  
+  // useEffect(() => {
+  //   options.physics.enabled = physicsEnabled;
+  //   if (titlePage === "") {
+  //     clearExistingOverlays();
+  //   } else {
+  //     if(currentStepIndex == minPotentials.length -1){
+  //       drawGraphMin(minPotentials, optimalWay, network);
+  //     }
+  //     else{
+  //     }
+  //   }
+  //   // options.physics.enabled = physicsEnabled;
 
-  }, [titlePage, minPotentials, optimalWay, physicsEnabled, network]);
+  // }, [titlePage, minPotentials, optimalWay, physicsEnabled, network, currentStepIndex]);
 
   // useEffect(() => {
   //   options.physics.enabled = physicsEnabled;
@@ -609,8 +743,7 @@ async function getMaxWay() {
       </div>
         <div className='main-container'>
             <div className='graph-title'>
-                <h2>OPERATIONNAL SEARCH</h2>
-                <h2>{titlePage}</h2>
+                <h2>OPERATIONNAL SEARCH :  {titlePage}</h2>
             </div>
             <div>
             <label>
@@ -622,14 +755,22 @@ async function getMaxWay() {
                 smooth
               </label>
               <div>
-                  <button onClick={handlePreviousStep} disabled={currentStepIndex === 0}>
+                  <button    className="button previous" onClick={handlePreviousStep} disabled={currentStepIndex === 0}>
                     Previous
                   </button>
                   <button
+                  className="button next"
                     onClick={handleNextStep}
                     disabled={currentStepIndex === minPotentials.length - 1}
                   >
                     Next
+                  </button>
+                  <button
+                  className="button skip"
+                    onClick={handleSkipStep}
+                    disabled={currentStepIndex === minPotentials.length - 1}
+                  >
+                    Skip
                   </button>
                 </div>
             </div>
