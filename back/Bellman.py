@@ -40,7 +40,7 @@ def set_arbre():
 
 
   #get first node of tree
-  first_node = getFirstNode(new_tree)
+  first_node = getFirstNode(arbre)
 
 
   #reverse tree to the algoritme traitement
@@ -120,7 +120,9 @@ def get_max_way():
 
 
   #get first node of tree
-  first_node = getFirstNode(not_cycle_tree)
+#   first_node = getFirstNode(not_cycle_tree)
+  first_node = getFirstNode(arbre)
+
 
 
   #reverse tree to the algoritme traitement
@@ -198,8 +200,22 @@ def getLastNode(tree, reversed_tree):
             last_node = cle
     return last_node
 
+# def getFirstNode(tree):
+    # return next(iter(tree))
 def getFirstNode(tree):
-    return next(iter(tree))
+    # Créer un ensemble pour stocker toutes les clés qui sont atteintes par d'autres clés
+    reached_keys = set()
+
+    # Parcourir chaque clé et ses sous-dictionnaires pour ajouter toutes les destinations
+    for subdict in tree.values():
+        reached_keys.update(subdict.keys())
+
+    # Parcourir toutes les clés de l'arbre pour identifier la racine
+    for key in tree.keys():
+        if key not in reached_keys:
+            return key
+
+    return None  # Retourner None si aucune racine n'est trouvée (ce qui serait étrange pour un arbre)
 
 # Créer un ensemble de toutes les valeurs des clés
 # valeurs = set(v for voisins in arbre.values() for v in voisins)
