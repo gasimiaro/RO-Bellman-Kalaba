@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect ,useCallback} from 'react';
 import * as vis from 'vis';
 import 'vis/dist/vis.min.css';
 import './Graph.css';
@@ -21,6 +21,42 @@ export default function Graph() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
+  //history
+  const [history, setHistory] = useState([{ nodes: [], edges: [] }]);
+const [currentIndex, setCurrentIndex] = useState(0);
+
+
+useEffect(() => {
+  const newHistory = [...history.slice(0, currentIndex + 1), { nodes, edges }];
+  setHistory(newHistory);
+  setCurrentIndex(newHistory.length - 1);
+}, [nodes, edges]);
+
+const undo = () => {
+  if (currentIndex > 0) {
+    setCurrentIndex(currentIndex - 1);
+    const { nodes, edges } = history[currentIndex - 1];
+    setNodes(nodes);
+    setEdges(edges);
+  }
+};
+
+useEffect(() => {
+  const handleKeyDown = (event) => {
+    if (event.ctrlKey && event.key === 'z') {  // Pour Windows/Linux, 'command' pour Mac
+      event.preventDefault();  // Empêche d'autres comportements par défaut du Ctrl+Z
+      undo();
+    }
+  };
+
+  // Ajout de l'écouteur d'événements au document
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Nettoyage de l'effet
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [undo, currentIndex]);  
 
 
 const options = {
@@ -772,7 +808,11 @@ async function getMaxWay() {
                   >
                     Skip
                   </button>
-                </div>
+                  <button className="button undo" onClick={undo} disabled={currentIndex === 0}>
+                  Undo
+                </button>
+              </div>
+
             </div>
             <div ref={graphRef} className='' />              
 

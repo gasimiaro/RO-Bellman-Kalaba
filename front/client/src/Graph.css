@@ -97,3 +97,7 @@
 .skip {
   background-color: red;
 }
+.undo {
+  background-color: #33f;
+  float: right;
+}
