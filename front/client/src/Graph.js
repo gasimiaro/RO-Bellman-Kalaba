@@ -26,37 +26,7 @@ export default function Graph() {
 const [currentIndex, setCurrentIndex] = useState(0);
 
 
-useEffect(() => {
-  const newHistory = [...history.slice(0, currentIndex + 1), { nodes, edges }];
-  setHistory(newHistory);
-  setCurrentIndex(newHistory.length - 1);
-}, [nodes, edges]);
 
-const undo = () => {
-  if (currentIndex > 0) {
-    setCurrentIndex(currentIndex - 1);
-    const { nodes, edges } = history[currentIndex - 1];
-    setNodes(nodes);
-    setEdges(edges);
-  }
-};
-
-useEffect(() => {
-  const handleKeyDown = (event) => {
-    if (event.ctrlKey && event.key === 'z') {  // Pour Windows/Linux, 'command' pour Mac
-      event.preventDefault();  // Empêche d'autres comportements par défaut du Ctrl+Z
-      undo();
-    }
-  };
-
-  // Ajout de l'écouteur d'événements au document
-  document.addEventListener('keydown', handleKeyDown);
-
-  // Nettoyage de l'effet
-  return () => {
-    document.removeEventListener('keydown', handleKeyDown);
-  };
-}, [undo, currentIndex]);  
 
 
 const options = {
@@ -187,6 +157,41 @@ async function editEdgeWithoutDrag(data, callback) {
 
   }
 }
+useEffect(() => {
+  const newHistory = [...history.slice(0, currentIndex + 1), { nodes, edges }];
+  setHistory(newHistory);
+  setCurrentIndex(newHistory.length - 1);
+}, [nodes, edges]);
+
+const undo = () => {
+  if (currentIndex > 0) {
+    setCurrentIndex(currentIndex - 1);
+    const { nodes, edges } = history[currentIndex - 1];
+    setNodes(nodes);
+    setEdges(edges);
+    clearExistingOverlays() ;
+    setTitlePage("");
+    setMinPotentials([{}]);
+    setCurrentStepIndex(0);
+  }
+};
+
+useEffect(() => {
+  const handleKeyDown = (event) => {
+    if (event.ctrlKey && event.key === 'z') {  // Pour Windows/Linux, 'command' pour Mac
+      event.preventDefault();  // Empêche d'autres comportements par défaut du Ctrl+Z
+      undo();
+    }
+  };
+
+  // Ajout de l'écouteur d'événements au document
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Nettoyage de l'effet
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [undo, currentIndex]);  
 
   function addNode(e) {
     e.preventDefault();
