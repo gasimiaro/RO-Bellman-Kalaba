@@ -3,7 +3,6 @@ import * as vis from 'vis';
 import 'vis/dist/vis.min.css';
 import './Graph.css';
 import Swal from 'sweetalert2';
-
 import 'sweetalert2/dist/sweetalert2.min.css';
 import axios from 'axios';
 import PotentialTable from './PotentialTable';
@@ -53,9 +52,19 @@ const options = {
 
     enabled: true, 
     initiallyActive: true, 
-    addNode : false,
-    addEdge : false,
-
+    // addNode : false,
+  addNode: (data, callback) => {
+    addNode().then(newNode => {
+      if (newNode) {
+        callback(newNode);
+      }
+    });
+  },
+  
+    // addEdge : false,
+      addEdge: (data, callback) => {
+        addEdge(data, callback);
+      },
     editEdge: {
       editWithoutDrag: function (data, callback) {
         editEdgeWithoutDrag(data, callback);
@@ -70,6 +79,9 @@ const options = {
 
 }
 };
+
+
+
 
 function removeEdgeById(edges, edgeId) {
   // Filter out the edge with the given ID
@@ -161,6 +173,7 @@ useEffect(() => {
   const newHistory = [...history.slice(0, currentIndex + 1), { nodes, edges }];
   setHistory(newHistory);
   setCurrentIndex(newHistory.length - 1);
+  
 }, [nodes, edges]);
 
 const undo = () => {
@@ -193,66 +206,91 @@ useEffect(() => {
   };
 }, [undo, currentIndex]);  
 
-  function addNode(e) {
-    e.preventDefault();
-    const newLabel = e.target.nodeLabel.value.trim(); // Trim leading/trailing spaces
-    const sublabel = 1;
-    if (nodes.some(node => node.label === newLabel)) {
-      Swal.fire('Attention!', 'Noeud déjà existant', 'warning');
-    } else {
-      const nodeOptions = nodes.map(node => ({
-        id: node.id,
-        label: node.label
-    }));
-        const newNode = {
-            id: newLabel,
-            label: newLabel,            
-        };
-      setNodes(prev => [...prev, newNode]);
-      // setNextNodeId(nextNodeId + 1);
+
+useEffect(() => {
+  const handleKeyDown = (event) => {
+    if (event.key === '+') {
+      event.preventDefault(); // Prevent default behavior of the '+' key
+      if (network) {
+        network.addNodeMode();
+      }
     }
-    e.target.nodeLabel.value = '';
-    setTitlePage("");
-    clearExistingOverlays() ;
-    setTitlePage("");
+  };
+
+  // Add the event listener to the document
+  document.addEventListener('keydown', handleKeyDown);
+
+  // Clean up the event listener on component unmount
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [network]);
+
+
+async function addNode() {
+  const { value: newLabel } = await Swal.fire({
+    title: 'Add Node',
+    input: 'text',
+    inputPlaceholder: 'Enter node label',
+    showCancelButton: true,
+    inputValidator: (value) => {
+      if (!value) {
+        return 'Node label cannot be empty';
+      } else if (nodes.some(node => node.label === value.trim())) {
+        return 'Node with this label already exists';
+      }
+    },
+  });
+
+  if (newLabel) {
+    const nodeId = newLabel.trim().replace(/\s+/g, '_'); // Replace whitespace with underscores
+    const newNode = {
+      id: nodeId,
+      label: newLabel.trim(),
+    };
+    setNodes(prev => [...prev, newNode]);
+    setTitlePage('');
+    clearExistingOverlays();
     setMinPotentials([{}]);
     setCurrentStepIndex(0);
-
+    return newNode;
   }
-  
-function addEdge(e) {
-    e.preventDefault();
-  
-    // Get selected node IDs
-    const fromId = e.target.node1.value;
-    const toId = e.target.node2.value;
-  
-    // Check if an edge already exists between the selected nodes
-    const existingEdge = edges.some(
-      (edge) => edge.from === fromId && edge.to === toId
-    );
-  
-    if (existingEdge) {
-      Swal.fire('Attention!', 'Un arc existe déjà entre ces noeuds!', 'warning');
-    } else {
-      const newEdge = {
-        from: fromId,
-        to: toId,
-        // length: 300,
-        label: e.target.edgeWeight.value,
-        arrows: "to" // Replace with desired default arrow direction
+}
+
+  async function addEdge(data, callback) {
+    const { value: newLabel } = await Swal.fire({
+      title: "Add Edge Label",
+      input: "text",
+      inputPlaceholder: "Enter edge label",
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value) {
+          return "You need to enter a label";
+        } else if (isNaN(value)) {
+          return "Label must be a number";
+        }
+      },
+    });
+
+    if (newLabel) {
+      if (typeof data.to === "object") data.to = data.to.id;
+      if (typeof data.from === "object") data.from = data.from.id;
+      const updatedEdge = {
+        from: data.from,
+        to: data.to,
+        label: newLabel,
+        arrows: "to",
       };
-      setEdges(prev => [...prev, newEdge]);
-      e.target.edgeWeight.value = 0; // Reset weight input
-    }
-    setTitlePage("");
-    clearExistingOverlays() ;
-    setTitlePage("");
-    setMinPotentials([{}]);
-    setCurrentStepIndex(0);
 
+      setEdges((prevEdges) => [...prevEdges, updatedEdge]);
+      callback(updatedEdge);
+      clearExistingOverlays();
+      setTitlePage("");
+      setMinPotentials([{}]);
+      setCurrentStepIndex(0);
+    }
   }
-  
+
 
 //############################################################################3
 
@@ -348,146 +386,18 @@ function addEdge(e) {
     }
   }
   
-// function drawGraphMin(all_potential, min_way_to_color, network) {
-//   // To get a node's data:
-//   console.log("min_way_to_color : ", min_way_to_color);
-
-//   // Check if min_way_to_color is not empty
-//   if (min_way_to_color.length === 0) {
-//     // If min_way_to_color is empty, reset node and edge styles to default
-//     const nodes = network.body.data.nodes;
-//     const edges = network.body.data.edges;
-
-//     nodes.update(nodes.map(node => ({ ...node, font: { size: 14 }, shadow: false })));
-//     edges.update(edges.map(edge => ({ ...edge, width: 1, dashes: false, color: '#848484', font: { color: '#555', size: 14 } })));
-//   } else {
-//     // If min_way_to_color is not empty, update node and edge styles
-//     const nodes = network.body.data.nodes;
-//     const edges = network.body.data.edges;
-
-//     nodes.update(nodes.map(node => {
-//       const isStartNode = min_way_to_color[0][0] === node.id;
-//       const isOnPath = min_way_to_color.some(path => path.includes(node.label));
-
-//       return {
-//         ...node,
-//         font: isStartNode
-//           ? { size: 22, color: '#fff', face: 'Arial', background: '#7f7' }
-//           : isOnPath
-//             ? { size: 22, color: '#fff', face: 'Arial' }
-//             : { size: 14 },
-//         shadow: isOnPath,
-//       };
-//     }));
-
-//     edges.update(edges.map(edge => {
-//       const isSpecialEdge = min_way_to_color.some(path => {
-//         for (let i = 0; i < path.length - 1; i++) {
-//           if (path[i] === edge.from && path[i + 1] === edge.to) {
-//             return true;
-//           }
-//         }
-//         return false;
-//       });
-
-//       let width = 1;
-//       let color = '#848484';
-//       let dashes = false;
-//       let fontColor = '#555';
-//       let fontSize = 14;
-
-//       if (isSpecialEdge) {
-//         width = 9;
-//         color = '#ddd';
-//         dashes = [3, 12];
-//         fontColor = '#000';
-//         fontSize = 24;
-//       }
-
-//       return {
-//         ...edge,
-//         width,
-//         dashes,
-//         color,
-//         font: { color: fontColor, size: fontSize },
-//       };
-//     }));
-//   }
-// }
-
-// function drawGraphMin(all_potential,min_way_to_color, network) {
-
-//   // To get a node's data:
-// console.log("min_way_to_color : ",min_way_to_color)
-//   const nodeOptions = nodes.map(node => ({
-//       id: node.id,
-//       label: node.label,
-//       color:  "#f88",
-//       font: 
-//       min_way_to_color[0][0] == node.id? { size: 22, color: "#fff", face: "Arial" ,background : "#7f7"} : 
-//       // min_way_to_color[0][min_way_to_color.length - 1] == node.id? { size: 22, color: "#fff", face: "Arial" ,background : "#ff4433"} :
-//               min_way_to_color.some(path => path.includes(node.label)) ? { size: 22, color: "#fff", face: "Arial" } :"",
-//       shadow: min_way_to_color.some(path => path.includes(node.label)) ?  true : false
-//   }));
-
-// const edgeOptions = edges.map(edge => {
-//   // Vérifiez si cette arête est présente dans un chemin spécifique de min_way_to_color
-//   const isSpecialEdge = min_way_to_color.some(path => {
-//       for (let i = 0; i < path.length - 1; i++) {
-//           if (path[i] === edge.from && path[i + 1] === edge.to) {
-//               return true;
-//           }
-//       }
-//       return false;
-//   });
-//   // Définissez la largeur et la couleur de l'arête en fonction de la condition
-//   let width = 1;
-//   let color = isSpecialEdge ? '#fff' : '#848484'; // Couleur différente pour les arêtes spéciales
-//   let dashes = false;
-//   let fontColor = '#555'; 
-//   let fontSize = 14;
-//   if (isSpecialEdge) {
-//       width = 9; // ou toute autre largeur souhaitée pour les arêtes spéciales
-//       color = "#ddd";
-//       dashes = [3, 12]; // Définir le style des traits, 5 pixels de trait suivi de 5 pixels d'espace
-//       fontColor = "#000";
-//       fontSize = 24;
-//   }
-//   return {
-//       ...edge,
-//       width: width,
-//       dashes : dashes,
-//       // length: 300,
-//       color: color,
-//       font : {color : fontColor, size : fontSize}
-//   };
-
-
-// });
-
-//   // network.setData({ 
-//   //   nodes: new vis.DataSet(nodeOptions), 
-//   //   edges: new vis.DataSet(edgeOptions) 
-//   // });
-// //  const network =  new vis.Network(graphRef.current, {
-// //       nodes: new vis.DataSet(nodeOptions),
-// //       edges: new vis.DataSet(edgeOptions),
-// //       options
-
-// //   });
-// //   network.on("afterDrawing", function () {
-// //     updateNodePositions(network,all_potential);
-// // });
-// return network; // Add this line to return the network instance
-// }
 
 //#############################################################################################################
 //#############################################################################################################
 
 function updateNodePositions(network,all_potential) {
+  if (titlePage === "") {
+    clearExistingOverlays();
+    return; // Exit if the titlePage is empty
+  }
+
 
   if (!all_potential.length) {
-    // console.log("all_potential is empty or not loaded yet");
     return; // Exit if data isn't ready
   }
   clearExistingOverlays();
@@ -550,6 +460,66 @@ const handleSkipStep = () => {
 };
 //#############################################################################################################
 //#############################################################################################################
+
+function checkGraph(graph){
+// Check if the graph is empty
+if (Object.keys(graph).length === 0) {
+  Swal.fire('Error!', 'The graph is empty', 'error');
+  return false;
+}
+
+// Check if the edge is empty
+if (Object.keys(edges).length === 0) {
+  Swal.fire('Error!', 'No way in the graph', 'error');
+  return false;
+}
+let hasSelfEdge = false;
+edges.forEach(edge => {
+  if (edge.from === edge.to) {
+    Swal.fire('Error!', `There is a self-edge on node ${edge.from}`, 'error');
+    hasSelfEdge = true; 
+  }
+});
+if (hasSelfEdge) {
+  return false;
+}
+
+  // Check if the graph has more than one starting node
+  const startingNodes = Object.keys(graph).filter(node => {
+    const isConnectedNode = edges.some(edge => edge.from === node || edge.to === node);
+    return !Object.values(graph).some(subGraph => subGraph[node]) && isConnectedNode;
+  });
+  // const startingNodes = Object.keys(graph).filter(node => !Object.values(graph).some(subGraph => subGraph[node]));
+  if (startingNodes.length == 0) {
+    Swal.fire('Error!', `There are no starting node`, 'error');
+    return false;
+  }  
+  if (startingNodes.length > 1) {
+    const startNodesString = startingNodes.join(', ');
+    Swal.fire('Error!', `There are more than one start node in the graph: ${startNodesString}`, 'error');
+    return false;
+  }
+  
+  // Check if the graph has more than one ending node
+  const endingNodes = Object.keys(graph).filter(node => {
+    const isConnectedNode = edges.some(edge => edge.from === node || edge.to === node);
+    return !Object.values(graph[node]).length && isConnectedNode;
+  });
+  // const endingNodes = Object.keys(graph).filter(node => !Object.values(graph[node]).length);
+  if (endingNodes.length == 0) {
+    Swal.fire('Error!', `There are no ending node`, 'error');
+    return false;
+  }  
+  if (endingNodes.length > 1) {
+    const endNodesString = endingNodes.join(', ');
+    Swal.fire('Error!', `There are more than one end node in the graph: ${endNodesString}`, 'error');
+    return false;
+  }
+
+  return true;
+}
+
+
   async function getMinWay() {
     // Create the graph object in the required format
     const graph = {};
@@ -568,9 +538,11 @@ const handleSkipStep = () => {
         });
     });
 
+    if(!checkGraph(graph)) return ;
+
     try {
       const response = await axios.post('/get_min_way', graph);
-      setTitlePage("Chemin Minimal");
+      setTitlePage("Minimal Way");
       const minPotentials_direct = response.data.min_potentials_at_each_step;
       const current_optimal_way = response.data.min_optimal_ways;
       setMinPotentials(minPotentials_direct);
@@ -605,6 +577,8 @@ async function getMaxWay() {
         });
     });
 
+    if(!checkGraph(graph)) return ;
+
     try {
       const response = await axios.post('/get_max_way', graph);
       setTitlePage("Chemin Maximal");
@@ -636,19 +610,6 @@ async function getMaxWay() {
     setPhysicsEnabled(event.target.checked);
   };
 
-  // useEffect(() => {
-  //   options.physics.enabled = physicsEnabled;
-  //   if(titlePage == ""){
-  //     drawGraph();
-  //     clearExistingOverlays() ;
-  //   }
-  //   else{
-  //     // drawGraphMin(minPotentials,optimalWay);
-  //     const network = drawGraphMin(minPotentials, optimalWay);
-  //     updateNodePositions(network, minPotentials);
-  //   }
-  // }, [physicsEnabled, titlePage, minPotentials, optimalWay, currentStepIndex]);
-
 
   function initializeGraph() {
     // Créez un tableau pour stocker les options de chaque nœud
@@ -674,16 +635,10 @@ async function getMaxWay() {
     
     if (!network) {
       initializeGraph();
+      clearExistingOverlays();
     }
   }, [nodes, edges, network]);
 
-// useEffect(()=>{
-//   console.log(posX)
-//   if(network){
-//     updateNodePositions(network,minPotentials); 
-//   }
-
-// },[posX,posY]);
 
   useEffect(() => {
     if (network) {
@@ -695,6 +650,7 @@ async function getMaxWay() {
       };
   
       network.setOptions(updatedOptions);
+      
     }
   }, [physicsEnabled, options, network]);
 
@@ -706,35 +662,10 @@ async function getMaxWay() {
       drawGraphMin(minPotentials, optimalWay, network);
     } else {
       resetGraphStyles(network);
+      
     }
   }, [titlePage, minPotentials, optimalWay, physicsEnabled, network, currentStepIndex]);
   
-  // useEffect(() => {
-  //   options.physics.enabled = physicsEnabled;
-  //   if (titlePage === "") {
-  //     clearExistingOverlays();
-  //   } else {
-  //     if(currentStepIndex == minPotentials.length -1){
-  //       drawGraphMin(minPotentials, optimalWay, network);
-  //     }
-  //     else{
-  //     }
-  //   }
-  //   // options.physics.enabled = physicsEnabled;
-
-  // }, [titlePage, minPotentials, optimalWay, physicsEnabled, network, currentStepIndex]);
-
-  // useEffect(() => {
-  //   options.physics.enabled = physicsEnabled;
-  //   if (titlePage === "") {
-  //     drawGraph();
-  //     clearExistingOverlays();
-  //   } else {
-  //     // const networkInstance = drawGraphMin(minPotentials, optimalWay);
-  //     // setNetwork(networkInstance);
-  //     drawGraphMin(minPotentials, optimalWay, network);
-  //   }
-  // }, [titlePage, minPotentials, optimalWay, physicsEnabled, nodes, edges]);
 
   useEffect(() => {
     if (network && minPotentials.length > 0) {
@@ -747,36 +678,10 @@ async function getMaxWay() {
     <div className="green-border container">
 
       <div className="sidebar green-border">
-        <form onSubmit={addNode}>
 
-          <label>
-            Label:
-            <input name="nodeLabel" />  
-          </label>
-          <button>Add Node</button>
-        </form>
-
-        <form onSubmit={addEdge}>
-          <select name="node1">
-            {nodes.map(node => 
-              <option key={node.id} value={node.id}>{node.label}</option>
-            )}
-          </select>
-          <select name="node2">
-            {nodes.map(node => 
-              <option key={node.id} value={node.id}>{node.label}</option>
-            )}
-          </select>
-          <label>
-            Weight:
-            <input type='number' name="edgeWeight" /> 
-          </label>
-          <button>Add Edge</button> 
-        </form>
-
-        <button onClick={resetGraph}>Reset</button> 
-        <button onClick={getMinWay}>Trouver le chemin Minimal</button>
-        <button onClick={getMaxWay}>Trouver le chemin Maximal</button>
+        <button className="button reset"  onClick={resetGraph}>Reset graph</button>  <br />
+        <button className="button min-way" onClick={getMinWay}>Find minimal ways</button><br />
+        <button className="button max-way" onClick={getMaxWay}>Find maximal ways</button><br />
         <div>
               <h1>Potentials at each step</h1>
               <PotentialTable minPotentials={minPotentials} currentStepIndex={currentStepIndex}  />

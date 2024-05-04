@@ -1,4 +1,6 @@
 export default function PotentialTable({ minPotentials, currentStepIndex }) {
+
+
   const nodes = Object.keys(minPotentials[0]);
 
   return (

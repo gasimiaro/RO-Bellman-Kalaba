@@ -70,7 +70,7 @@ def set_arbre():
   min_step = res_min_potential['step']
   min_potentials_at_each_step = res_min_potential['potentials_at_each_step']
   rectify_min_potentialsStep(min_potentials_at_each_step)
-#   print(min_potentials_at_each_step)
+  print("min_potentials_at_each_step : ",min_potentials_at_each_step)
   #get minimal optimal way
   min_optimal_ways = optimalSearch(new_tree,min_potential,first_node,last_node)
 
@@ -155,7 +155,6 @@ def get_max_way():
       'max_optimal_ways' : max_optimal_ways,
       'max_potentials_at_each_step' : max_potentials_at_each_step
   }
-  print(data)
   response = make_response(jsonify(success=True))
   response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
   return data
@@ -256,19 +255,22 @@ def getAllMinPotential(tree,last):
     potential[last] = 0
     potentials_at_each_step = [] 
     # potential = copy.deepcopy(potentiel)
-    step = 0
+    step = 1
     changed = True
     # while step < len(tree) :
     while changed :
         changed = False
         
         for parent_node,(child,s) in tree.items():
-        #    if step in s:               
-                for child_node,val in child.items():
-                    new_pot = potential[child_node] + val
-                    if potential[child_node] != "inf" and new_pot < potential[parent_node]:
-                        potential[parent_node] = new_pot
-                        changed = True
+        #    if step in s: 
+                if len(child) !=0 :   
+                    for child_node,val in child.items():
+                        if (step - 1) in tree[child_node][1]:
+                            new_pot = potential[child_node] + val
+                            if potential[child_node] != "inf" and new_pot < potential[parent_node]:
+                                potential[parent_node] = new_pot
+                                changed = True
+
         potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
         step += 1
     #recheck all potential for type of val infinity to javascript json
@@ -291,12 +293,14 @@ def getAllMaxPotential(tree,last):
     while changed:
         changed  =False
         for parent_node,(child,s) in tree.items():
-           if step in s:               
-                for child_node,val in child.items():
-                    new_pot = potential[child_node] + val
-                    if potential[child_node] != "-inf" and new_pot > potential[parent_node]:
-                        potential[parent_node] = new_pot
-                        changed = True
+           if step in s:        
+                if len(child) !=0 :               
+                    for child_node,val in child.items():
+                        if (step - 1) in tree[child_node][1]:
+                            new_pot = potential[child_node] + val
+                            if potential[child_node] != "-inf" and new_pot > potential[parent_node]:
+                                potential[parent_node] = new_pot
+                                changed = True
         potentials_at_each_step.append(copy.deepcopy(potential))  # Ajouter les valeurs de potentiel à cette étape
         step += 1
     for node, val in potential.items():
@@ -490,7 +494,6 @@ def get_min_potential():
     'potential': min_potential, 
     'optimal_path': min_optimal_path
   }
-  print(jsonify(data))
   return jsonify(data)
 
 @app.route('/get_max_potential')  
