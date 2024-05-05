@@ -55,8 +55,6 @@ Contributions are welcome. Please open an issue to discuss your ideas or submit 
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed university project.
 
----
 
-This README file uses a structured format to clearly define environment setup instructions, making it easy for users to follow and set up the project on their own systems. Adjustments and additional sections like "Contributing" and "License" have been added for completeness. Make sure you have a `LICENSE` file in your repository if you mention it in the README.
