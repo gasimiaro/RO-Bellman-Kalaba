@@ -1,7 +1,7 @@
 # RO-Bellman-Kalaba
-simple repository for path finding with Bellman Kalaba Algorithm
+simple repository for path finding with Bellman Kalaba Algorithm 
 # Front :
-1- go to front/client
+1- go to front/client \n
 2- npm start
 
 # Traitement :
