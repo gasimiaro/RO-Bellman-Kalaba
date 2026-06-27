@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <circle cx="12" cy="32" r="6" fill="#1565c0"/>
+  <circle cx="32" cy="12" r="6" fill="#1565c0"/>
+  <circle cx="32" cy="52" r="6" fill="#1565c0"/>
+  <circle cx="52" cy="32" r="6" fill="#1565c0"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#e53935"/>
+    </marker>
+  </defs>
+  <line x1="18" y1="32" x2="26" y2="12" stroke="#e53935" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="18" y1="32" x2="26" y2="52" stroke="#e53935" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="38" y1="12" x2="46" y2="32" stroke="#e53935" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="38" y1="52" x2="46" y2="32" stroke="#e53935" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>
