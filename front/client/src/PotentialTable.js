@@ -1,5 +1,7 @@
-export default function PotentialTable({ minPotentials, currentStepIndex }) {
-
+export default function PotentialTable({ minPotentials, currentStepIndex, lang }) {
+  const t = lang === 'fr'
+    ? { node: "Sommet", step: "Étape" }
+    : { node: "Node", step: "Step" };
 
   const nodes = Object.keys(minPotentials[0]);
 
@@ -7,10 +9,10 @@ export default function PotentialTable({ minPotentials, currentStepIndex }) {
     <table>
       <thead>
         <tr>
-          <th>Node</th>
+          <th>{t.node}</th>
           {minPotentials.map((step, index) => (
             <th key={index} style={{ backgroundColor: index <= currentStepIndex ? 'lightgreen' : 'transparent' }}>
-              Step {index + 1}
+              {t.step} {index + 1}
             </th>
           ))}
         </tr>

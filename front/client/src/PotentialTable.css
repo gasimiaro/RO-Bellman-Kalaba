@@ -1,5 +1,4 @@
 table{
-
     border-collapse: collapse;
 }
 td,th{
@@ -9,4 +8,17 @@ td,th{
 }
 tr td:first-child {
     font-size: 30px;
+}
+
+@media (max-width: 768px) {
+  td, th {
+    padding: 3px;
+    font-size: 12px;
+  }
+  tr td:first-child {
+    font-size: 16px;
+  }
+  .sidebar table {
+    width: 100%;
+  }
 }

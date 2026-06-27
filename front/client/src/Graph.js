@@ -9,6 +9,117 @@ import PotentialTable from './PotentialTable';
 
 const API_URL = process.env.REACT_APP_API_URL || '';
 
+const i18n = {
+  fr: {
+    synopsis: "Quelle est l'utilité de ce projet ?",
+    learnMore: "En savoir plus",
+    title: "Algorithme de Bellman-Kalaba",
+    close: "Fermer",
+    modalTitle: "Algorithme de Bellman-Kalaba",
+    modalPurpose: "Objectif",
+    modalPurposeText: "Trouver le chemin optimal (minimal ou maximal) dans un graphe orienté sans cycle, en utilisant la programmation dynamique.",
+    modalUtility: "Utilité",
+    modalUtilityText: "Cet algorithme est utilisé en recherche opérationnelle pour résoudre des problèmes de plus court/long chemin dans les réseaux de transport, la planification de projets, ou l'optimisation de chaînes logistiques.",
+    modalExplanation: "Explication",
+    modalExplanationText: "L'algorithme procède par étapes : il calcule les potentiels minimaux/maximaux de chaque nœud en remontant de la fin vers le début, puis détermine le ou les chemins optimaux en suivant les potentiels calculés.",
+    lang: "EN",
+    potentialsTitle: "Potentiels à chaque étape",
+    operationalSearch: "RECHERCHE OPÉRATIONNELLE :",
+    minimalWay: "Chemin Minimal",
+    maximalWay: "Chemin Maximal",
+    previous: "Précédent",
+    next: "Suivant",
+    skip: "Final",
+    undo: "Annuler",
+    smooth: "lisse",
+    reset: "Réinitialiser",
+    findMin: "Trouver chemin min",
+    findMax: "Trouver chemin max",
+    addNodeTitle: "Ajouter un sommet",
+    addNodePlaceholder: "Entrez le nom du sommet",
+    addNodeEmpty: "Le nom du sommet ne peut pas être vide",
+    addNodeExists: "Un sommet avec ce nom existe déjà",
+    addEdgeTitle: "Ajouter une arête",
+    addEdgePlaceholder: "Entrez le poids de l'arête",
+    addEdgeNumber: "Le poids doit être un nombre",
+    editEdgeTitle: "Modifier le poids",
+    editEdgePlaceholder: "Entrez le nouveau poids",
+    deleteConfirmTitle: "Êtes-vous sûr de vouloir supprimer ce",
+    deleteConfirmText: "Vous ne pourrez pas revenir en arrière !",
+    deleteConfirmYes: "Oui, supprimer !",
+    deleted: "Supprimé !",
+    deletedText: "Votre",
+    deletedTextEnd: "a été supprimé.",
+    errorGraphEmpty: "Le graphe est vide",
+    errorNoWay: "Aucun chemin dans le graphe",
+    errorSelfEdge: "Il y a une boucle sur le nœud",
+    errorNoStart: "Il n'y a pas de nœud de départ",
+    errorMultiStart: "Il y a plusieurs nœuds de départ dans le graphe :",
+    errorNoEnd: "Il n'y a pas de nœud d'arrivée",
+    errorMultiEnd: "Il y a plusieurs nœuds d'arrivée dans le graphe :",
+    success: "Succès !",
+    successSend: "Données du graphe envoyées avec succès !",
+    error: "Erreur !",
+    errorSend: "Une erreur est survenue lors de l'envoi des données !",
+    node: "nœud",
+    edge: "arête"
+  },
+  en: {
+    synopsis: "What is the utility of this project?",
+    learnMore: "Learn more",
+    title: "Bellman-Kalaba Algorithm",
+    close: "Close",
+    modalTitle: "Bellman-Kalaba Algorithm",
+    modalPurpose: "Purpose",
+    modalPurposeText: "Find the optimal path (minimum or maximum) in a directed acyclic graph using dynamic programming.",
+    modalUtility: "Utility",
+    modalUtilityText: "This algorithm is used in operations research to solve shortest/longest path problems in transport networks, project planning, or supply chain optimization.",
+    modalExplanation: "Explanation",
+    modalExplanationText: "The algorithm proceeds step by step: it computes the minimum/maximum potentials of each node going backwards from the end, then determines the optimal path(s) by following the computed potentials.",
+    lang: "FR",
+    potentialsTitle: "Potentials at each step",
+    operationalSearch: "OPERATIONAL SEARCH :",
+    minimalWay: "Minimal Way",
+    maximalWay: "Maximal Way",
+    previous: "Previous",
+    next: "Next",
+    skip: "Skip",
+    undo: "Undo",
+    smooth: "smooth",
+    reset: "Reset graph",
+    findMin: "Find minimal ways",
+    findMax: "Find maximal ways",
+    addNodeTitle: "Add Node",
+    addNodePlaceholder: "Enter node label",
+    addNodeEmpty: "Node label cannot be empty",
+    addNodeExists: "Node with this label already exists",
+    addEdgeTitle: "Add Edge Label",
+    addEdgePlaceholder: "Enter edge label",
+    addEdgeNumber: "Label must be a number",
+    editEdgeTitle: "Edit Edge Label",
+    editEdgePlaceholder: "Enter edge label",
+    deleteConfirmTitle: "Are you sure you want to delete this",
+    deleteConfirmText: "You won't be able to revert this!",
+    deleteConfirmYes: "Yes, delete it!",
+    deleted: "Deleted!",
+    deletedText: "Your",
+    deletedTextEnd: "has been deleted.",
+    errorGraphEmpty: "The graph is empty",
+    errorNoWay: "No way in the graph",
+    errorSelfEdge: "There is a self-edge on node",
+    errorNoStart: "There are no starting node",
+    errorMultiStart: "There are more than one start node in the graph:",
+    errorNoEnd: "There are no ending node",
+    errorMultiEnd: "There are more than one end node in the graph:",
+    success: "Success!",
+    successSend: "Graph data sent successfully!",
+    error: "Error!",
+    errorSend: "An error occurred while sending data!",
+    node: "node",
+    edge: "edge"
+  }
+};
+
 export default function Graph() {
     // const [nextNodeId,setNextNodeId ] = useState(1);
   const [nodes, setNodes] = useState([]);
@@ -25,7 +136,11 @@ export default function Graph() {
   const [posY, setPosY] = useState(0);
   //history
   const [history, setHistory] = useState([{ nodes: [], edges: [] }]);
-const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [lang, setLang] = useState('fr');
+  const [showModal, setShowModal] = useState(false);
+
+  const t = i18n[lang];
 
 
 
@@ -94,15 +209,16 @@ function removeEdgeById(edges, edgeId) {
 
 
 async function confirmDelete(data, callback, type) {
-  const itemType = type.charAt(0).toUpperCase() + type.slice(1); // 'Node' or 'Edge'
+  const itemType = type === 'node' ? t.node : t.edge;
+  const itemTypeCapitalized = itemType.charAt(0).toUpperCase() + itemType.slice(1);
   const swalResult = await Swal.fire({
-    title: `Are you sure you want to delete this ${itemType}?`,
-    text: "You won't be able to revert this!",
+    title: `${t.deleteConfirmTitle} ${itemTypeCapitalized}?`,
+    text: t.deleteConfirmText,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, delete it!'
+    confirmButtonText: t.deleteConfirmYes
   });
 
   if (swalResult.value) {
@@ -122,10 +238,9 @@ async function confirmDelete(data, callback, type) {
       setTitlePage("");
       setMinPotentials([{}]);
       setCurrentStepIndex(0);
-    // callback(data); // Vis.js expects this callback to be called with the data to finalize the deletion
     Swal.fire(
-      'Deleted!',
-      `Your ${itemType} has been deleted.`,
+      t.deleted,
+      `${t.deletedText} ${itemTypeCapitalized} ${t.deletedTextEnd}`,
       'success'
     );
   }
@@ -133,7 +248,7 @@ async function confirmDelete(data, callback, type) {
 
 async function editEdgeWithoutDrag(data, callback) {
   const { value: newLabel } = await Swal.fire({
-    title: "Edit Edge Label",
+    title: t.editEdgeTitle,
     input: "text",   
     inputValue: data.label,
     showCancelButton: true,
@@ -232,15 +347,15 @@ useEffect(() => {
 
 async function addNode() {
   const { value: newLabel } = await Swal.fire({
-    title: 'Add Node',
+    title: t.addNodeTitle,
     input: 'text',
-    inputPlaceholder: 'Enter node label',
+    inputPlaceholder: t.addNodePlaceholder,
     showCancelButton: true,
     inputValidator: (value) => {
       if (!value) {
-        return 'Node label cannot be empty';
+        return t.addNodeEmpty;
       } else if (nodes.some(node => node.label === value.trim())) {
-        return 'Node with this label already exists';
+        return t.addNodeExists;
       }
     },
   });
@@ -262,15 +377,15 @@ async function addNode() {
 
   async function addEdge(data, callback) {
     const { value: newLabel } = await Swal.fire({
-      title: "Add Edge Label",
+      title: t.addEdgeTitle,
       input: "text",
-      inputPlaceholder: "Enter edge label",
+      inputPlaceholder: t.addEdgePlaceholder,
       showCancelButton: true,
       inputValidator: (value) => {
         if (!value) {
           return "You need to enter a label";
         } else if (isNaN(value)) {
-          return "Label must be a number";
+          return t.addEdgeNumber;
         }
       },
     });
@@ -465,21 +580,19 @@ const handleSkipStep = () => {
 //#############################################################################################################
 
 function checkGraph(graph){
-// Check if the graph is empty
 if (Object.keys(graph).length === 0) {
-  Swal.fire('Error!', 'The graph is empty', 'error');
+  Swal.fire(t.error, t.errorGraphEmpty, 'error');
   return false;
 }
 
-// Check if the edge is empty
 if (Object.keys(edges).length === 0) {
-  Swal.fire('Error!', 'No way in the graph', 'error');
+  Swal.fire(t.error, t.errorNoWay, 'error');
   return false;
 }
 let hasSelfEdge = false;
 edges.forEach(edge => {
   if (edge.from === edge.to) {
-    Swal.fire('Error!', `There is a self-edge on node ${edge.from}`, 'error');
+    Swal.fire(t.error, `${t.errorSelfEdge} ${edge.from}`, 'error');
     hasSelfEdge = true; 
   }
 });
@@ -487,35 +600,31 @@ if (hasSelfEdge) {
   return false;
 }
 
-  // Check if the graph has more than one starting node
   const startingNodes = Object.keys(graph).filter(node => {
     const isConnectedNode = edges.some(edge => edge.from === node || edge.to === node);
     return !Object.values(graph).some(subGraph => subGraph[node]) && isConnectedNode;
   });
-  // const startingNodes = Object.keys(graph).filter(node => !Object.values(graph).some(subGraph => subGraph[node]));
   if (startingNodes.length == 0) {
-    Swal.fire('Error!', `There are no starting node`, 'error');
+    Swal.fire(t.error, t.errorNoStart, 'error');
     return false;
   }  
   if (startingNodes.length > 1) {
     const startNodesString = startingNodes.join(', ');
-    Swal.fire('Error!', `There are more than one start node in the graph: ${startNodesString}`, 'error');
+    Swal.fire(t.error, `${t.errorMultiStart} ${startNodesString}`, 'error');
     return false;
   }
   
-  // Check if the graph has more than one ending node
   const endingNodes = Object.keys(graph).filter(node => {
     const isConnectedNode = edges.some(edge => edge.from === node || edge.to === node);
     return !Object.values(graph[node]).length && isConnectedNode;
   });
-  // const endingNodes = Object.keys(graph).filter(node => !Object.values(graph[node]).length);
   if (endingNodes.length == 0) {
-    Swal.fire('Error!', `There are no ending node`, 'error');
+    Swal.fire(t.error, t.errorNoEnd, 'error');
     return false;
   }  
   if (endingNodes.length > 1) {
     const endNodesString = endingNodes.join(', ');
-    Swal.fire('Error!', `There are more than one end node in the graph: ${endNodesString}`, 'error');
+    Swal.fire(t.error, `${t.errorMultiEnd} ${endNodesString}`, 'error');
     return false;
   }
 
@@ -545,7 +654,7 @@ if (hasSelfEdge) {
 
     try {
       const response = await axios.post(`${API_URL}/get_min_way`, graph);
-      setTitlePage("Minimal Way");
+      setTitlePage(t.minimalWay);
       const minPotentials_direct = response.data.min_potentials_at_each_step;
       const current_optimal_way = response.data.min_optimal_ways;
       setMinPotentials(minPotentials_direct);
@@ -556,10 +665,10 @@ if (hasSelfEdge) {
         drawGraphMin(minPotentials_direct,current_optimal_way,network);
       }
       setOptimalWay(current_optimal_way);
-      Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
+      Swal.fire(t.success, t.successSend, 'success');
     } catch (error) {
       console.error(error);
-      Swal.fire('Error!', 'Une erreur est survenue lors de l\'envoi des données!', 'error');
+      Swal.fire(t.error, t.errorSend, 'error');
     }
   }
 
@@ -584,7 +693,7 @@ async function getMaxWay() {
 
     try {
       const response = await axios.post(`${API_URL}/get_max_way`, graph);
-      setTitlePage("Chemin Maximal");
+      setTitlePage(t.maximalWay);
       const maxPotentials_direct = response.data.max_potentials_at_each_step;
       const current_optimal_way = response.data.max_optimal_ways;
       setMinPotentials(maxPotentials_direct);
@@ -595,10 +704,10 @@ async function getMaxWay() {
       }
       setOptimalWay(current_optimal_way);
 
-      Swal.fire('Success!', 'Données du graph envoyées avec succès!', 'success');
+      Swal.fire(t.success, t.successSend, 'success');
     } catch (error) {
       console.error(error);
-      Swal.fire('Error!', 'Une erreur est survenue lors de l\'envoi des données!', 'error');
+      Swal.fire(t.error, t.errorSend, 'error');
     }
   }
 
@@ -677,60 +786,82 @@ async function getMaxWay() {
   }, [network, minPotentials, currentStepIndex]);   
 
   return (
-    // <div style={{ border: '3px solid green' }}>      
-    <div className="container">
-
-      <div className="sidebar green-border">
-
-        <button className="button reset"  onClick={resetGraph}>Reset graph</button>  <br />
-        <button className="button min-way" onClick={getMinWay}>Find minimal ways</button><br />
-        <button className="button max-way" onClick={getMaxWay}>Find maximal ways</button><br />
-        <div>
-              <h1>Potentials at each step</h1>
-              <PotentialTable minPotentials={minPotentials} currentStepIndex={currentStepIndex}  />
-            </div>
+    <div>
+      <div className="header">
+        <div className="header-content">
+          <span className="synopsis">{t.synopsis}</span>
+          <button className="button info-btn" onClick={() => setShowModal(true)}>{t.learnMore}</button>
+          <button className="button lang-btn" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}>{t.lang}</button>
+        </div>
       </div>
-        <div className='main-container green-border'>
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>{t.modalTitle}</h2>
+            <h3>{t.modalPurpose}</h3>
+            <p>{t.modalPurposeText}</p>
+            <h3>{t.modalUtility}</h3>
+            <p>{t.modalUtilityText}</p>
+            <h3>{t.modalExplanation}</h3>
+            <p>{t.modalExplanationText}</p>
+            <button className="button close-btn" onClick={() => setShowModal(false)}>{t.close}</button>
+          </div>
+        </div>
+      )}
+
+    <div className="container">
+      <div className="sidebar">
+        <div>
+          <h1>{t.potentialsTitle}</h1>
+          <PotentialTable minPotentials={minPotentials} currentStepIndex={currentStepIndex} lang={lang} />
+        </div>
+      </div>
+        <div className='main-container'>
+            <div ref={graphRef} className='graph-container' />
             <div className='graph-title'>
-                <h2>OPERATIONNAL SEARCH :  {titlePage}</h2>
+                <h2>{t.operationalSearch}  {titlePage}</h2>
             </div>
-            <div>
+            <div className='controls'>
             <label>
                 <input
                   type="checkbox"
                   checked={physicsEnabled}
                   onChange={handlePhysicsChange}
                 />
-                smooth
+                {t.smooth}
               </label>
               <div>
                   <button    className="button previous" onClick={handlePreviousStep} disabled={currentStepIndex === 0}>
-                    Previous
+                    {t.previous}
                   </button>
                   <button
                   className="button next"
                     onClick={handleNextStep}
                     disabled={currentStepIndex === minPotentials.length - 1}
                   >
-                    Next
+                    {t.next}
                   </button>
                   <button
                   className="button skip"
                     onClick={handleSkipStep}
                     disabled={currentStepIndex === minPotentials.length - 1}
                   >
-                    Skip
+                    {t.skip}
                   </button>
                   <button className="button undo" onClick={undo} disabled={currentIndex === 0}>
-                  Undo
+                  {t.undo}
                 </button>
               </div>
-
             </div>
-            <div ref={graphRef} className='' />              
-
+            <div className='graph-actions'>
+              <button className="button reset" onClick={resetGraph}>{t.reset}</button>
+              <button className="button min-way" onClick={getMinWay}>{t.findMin}</button>
+              <button className="button max-way" onClick={getMaxWay}>{t.findMax}</button>
+            </div>
         </div>
 
+    </div>
     </div>
   );
 
