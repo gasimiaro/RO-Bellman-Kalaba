@@ -544,7 +544,7 @@ if (hasSelfEdge) {
     if(!checkGraph(graph)) return ;
 
     try {
-      const response = await axios.post('/get_min_way', graph);
+      const response = await axios.post(`${API_URL}/get_min_way`, graph);
       setTitlePage("Minimal Way");
       const minPotentials_direct = response.data.min_potentials_at_each_step;
       const current_optimal_way = response.data.min_optimal_ways;
@@ -583,7 +583,7 @@ async function getMaxWay() {
     if(!checkGraph(graph)) return ;
 
     try {
-      const response = await axios.post('/get_max_way', graph);
+      const response = await axios.post(`${API_URL}/get_max_way`, graph);
       setTitlePage("Chemin Maximal");
       const maxPotentials_direct = response.data.max_potentials_at_each_step;
       const current_optimal_way = response.data.max_optimal_ways;

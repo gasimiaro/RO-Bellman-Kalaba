@@ -1,10 +1,10 @@
 from flask import Flask, jsonify , make_response, request
 from flask_cors import CORS
 import copy
+import os
 
 app = Flask(__name__)
-# CORS(app) 
-cors = CORS(app, origins=["http://localhost:3000"] )
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 # @app.after_request
 # def after_request(response):
 #   response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
@@ -88,7 +88,7 @@ def set_arbre():
 #   return response
   response = jsonify(data)
   
-  response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+  response.headers.add('Access-Control-Allow-Origin', '*')
   response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
   
   return response
@@ -156,7 +156,7 @@ def get_max_way():
       'max_potentials_at_each_step' : max_potentials_at_each_step
   }
   response = make_response(jsonify(success=True))
-  response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+  response.headers['Access-Control-Allow-Origin'] = '*'
   return data
 #   return jsonify(success=True)
 
@@ -510,4 +510,5 @@ def get_max_potential():
   })
   
 if __name__ == '__main__':
-  app.run()
+  port = int(os.environ.get('PORT', 5000))
+  app.run(host='0.0.0.0', port=port)
