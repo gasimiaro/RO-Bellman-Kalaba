@@ -6,6 +6,9 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import axios from 'axios';
 import PotentialTable from './PotentialTable';
+
+const API_URL = process.env.REACT_APP_API_URL || '';
+
 export default function Graph() {
     // const [nextNodeId,setNextNodeId ] = useState(1);
   const [nodes, setNodes] = useState([]);
@@ -675,7 +678,7 @@ async function getMaxWay() {
 
   return (
     // <div style={{ border: '3px solid green' }}>      
-    <div className="green-border container">
+    <div className="container">
 
       <div className="sidebar green-border">
 
@@ -687,7 +690,7 @@ async function getMaxWay() {
               <PotentialTable minPotentials={minPotentials} currentStepIndex={currentStepIndex}  />
             </div>
       </div>
-        <div className='main-container'>
+        <div className='main-container green-border'>
             <div className='graph-title'>
                 <h2>OPERATIONNAL SEARCH :  {titlePage}</h2>
             </div>

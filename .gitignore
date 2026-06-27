@@ -1,0 +1,38 @@
+# --- Python backend ---
+back/venv/
+back/__pycache__/
+back/*.pyc
+back/.Python
+back/bin/
+back/lib/
+back/include/
+back/pip-selfcheck.json
+
+# --- React frontend ---
+front/client/node_modules/
+front/client/build/
+front/client/.env.local
+front/client/.env.development.local
+front/client/.env.test.local
+front/client/.env.production.local
+
+# --- Angular frontend (not used for deployment) ---
+front_angular/
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- IDE ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# --- Logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
