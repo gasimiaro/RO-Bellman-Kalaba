@@ -155,10 +155,10 @@ def get_max_way():
       'max_optimal_ways' : max_optimal_ways,
       'max_potentials_at_each_step' : max_potentials_at_each_step
   }
-  response = make_response(jsonify(success=True))
-  response.headers['Access-Control-Allow-Origin'] = '*'
-  return data
-#   return jsonify(success=True)
+  response = jsonify(data)
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+  return response
 
 
 
