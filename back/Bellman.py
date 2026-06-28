@@ -5,12 +5,13 @@ import os
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-# @app.after_request
-# def after_request(response):
-#   response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-#   response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-#   response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-#   return response
+
+@app.after_request
+def after_request(response):
+  response.headers.add('Access-Control-Allow-Origin', '*')
+  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  return response
 
 # arbre = {
 #     'x1': {"x1" : 3,'x2': 10},
@@ -30,7 +31,7 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 #     'x15': {'x14': 5, 'x16': 6},
 #     'x16': {}
 # }
-@app.route('/get_min_way', methods=['POST', 'OPTIONS'])
+@app.route('/get_min_way', methods=['POST'])
 def set_arbre():
 
   arbre = request.get_json() 
@@ -106,7 +107,7 @@ def rectify_min_potentialsStep(min_potentials_at_each_step):
     return min_potentials_at_each_step
 
 
-@app.route('/get_max_way', methods=['POST', 'OPTIONS'])
+@app.route('/get_max_way', methods=['POST'])
 def get_max_way():
 
   arbre = request.get_json() 
