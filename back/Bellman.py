@@ -1,25 +1,23 @@
 from flask import Flask, jsonify , make_response, request
-from flask_cors import CORS
 import copy
 import os
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.before_request
 def handle_preflight():
     if request.method == 'OPTIONS':
         response = make_response()
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
         return response
 
 @app.after_request
 def after_request(response):
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+  response.headers['Access-Control-Allow-Origin'] = '*'
+  response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+  response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
   return response
 
 # arbre = {
@@ -96,13 +94,7 @@ def set_arbre():
 #   response = make_response(jsonify(data))
 #   response.headers['Access-Control-Allow-Origin'] = 'http://localhost:3000'
 #   return response
-  response = jsonify(data)
-  
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-  
-  return response
-#   return jsonify(success=True)
+  return jsonify(data)
 
 ###############################################################
 def rectify_min_potentialsStep(min_potentials_at_each_step):
@@ -165,10 +157,7 @@ def get_max_way():
       'max_optimal_ways' : max_optimal_ways,
       'max_potentials_at_each_step' : max_potentials_at_each_step
   }
-  response = jsonify(data)
-  response.headers.add('Access-Control-Allow-Origin', '*')
-  response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-  return response
+  return jsonify(data)
 
 
 
